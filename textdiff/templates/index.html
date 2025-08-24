@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>برنامه مقایسه کننده متون</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #10b981;
+            --secondary-dark: #059669;
+            --light: #f9fafb;
+            --dark: #1f2937;
+            --gray: #6b7280;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --background: #f3f4f6;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Vazirmatn', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: var(--background);
+            color: var(--dark);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+        
+        .app-container {
+            width: 100%;
+            max-width: 1200px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+
+            transform: scale(0.85);
+            transform-origin: top center; /* نقطه مرجع اسکیل */
+        }
+        
+        .app-header {
+            background: linear-gradient(145deg, var(--primary-dark), var(--primary));
+            color: white;
+            padding: 20px;
+            text-align: center;
+            position: relative;
+        }
+        
+        .app-title {
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+        
+        .app-subtitle {
+            font-size: 1rem;
+            opacity: 0.9;
+            margin-bottom: 10px;
+        }
+        
+        .app-body {
+            padding: 15px;
+        }
+        
+        .comparison-form {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .text-input-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .text-input-group label {
+            font-weight: 600;
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .text-input-group textarea {
+            padding: 15px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 1rem;
+            resize: vertical;
+            min-height: 200px;
+            transition: all 0.3s;
+            font-family: inherit;
+        }
+        
+        .text-input-group textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+        }
+        
+        .form-actions {
+            grid-column: span 2;
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 15px 30px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            font-size: 1.1rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(145deg, var(--primary), var(--primary-dark));
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(99, 102, 241, 0.3);
+        }
+        
+        .btn-secondary {
+            background: white;
+            color: var(--primary);
+            border: 2px solid var(--primary);
+        }
+        
+        .btn-secondary:hover {
+            background: var(--light);
+            transform: translateY(-2px);
+        }
+        
+        .results-section {
+            margin-top: 40px;
+            padding-top: 30px;
+            border-top: 1px solid #eee;
+        }
+        
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .results-title {
+            font-size: 1.8rem;
+            color: var(--dark);
+        }
+        
+        .cost-badge {
+            background: linear-gradient(145deg, var(--secondary), var(--secondary-dark));
+            color: white;
+            padding: 8px 20px;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+        
+        .text-comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .text-card {
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 20px;
+            background: var(--light);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+        }
+        
+        .text-card h3 {
+            margin-bottom: 15px;
+            color: var(--dark);
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--primary);
+        }
+        
+        .text-content {
+            line-height: 1.8;
+            font-size: 1.1rem;
+        }
+        
+        .operations-list {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+            margin-top: 30px;
+        }
+        
+        .operations-list h3 {
+            margin-bottom: 15px;
+            color: var(--dark);
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--primary);
+        }
+        
+        .operations-list ul {
+            list-style: none;
+        }
+        
+        .operations-list li {
+            padding: 12px 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            background: #f8f9fa;
+            border-left: 4px solid var(--primary);
+        }
+        
+        .match {
+            border-left-color: var(--secondary) !important;
+        }
+        
+        .insert {
+            border-left-color: var(--primary) !important;
+        }
+        
+        .delete {
+            border-left-color: var(--danger) !important;
+        }
+        
+        .substitute {
+            border-left-color: var(--warning) !important;
+        }
+        
+        .app-footer {
+            background: var(--dark);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            margin-top: 40px;
+        }
+        
+        .footer-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        
+        .github-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        
+        .github-link:hover {
+            color: #ccc;
+            transform: translateY(-2px);
+        }
+        
+        @media (max-width: 900px) {
+            .comparison-form {
+                grid-template-columns: 1fr;
+            }
+            
+            .form-actions {
+                grid-column: span 1;
+            }
+            
+            .text-comparison {
+                grid-template-columns: 1fr;
+            }
+            
+            .footer-content {
+                flex-direction: column;
+                gap: 15px;
+            }
+        }
+        
+        .highlight {
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-weight: 500;
+        }
+        
+        .highlight.match {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+        
+        .highlight.insert {
+            background-color: #dbeafe;
+            color: #3730a3;
+        }
+        
+        .highlight.delete {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+        
+        .highlight.substitute {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css">
+</head>
+<body>
+    <div class="app-container">
+        <div class="app-header">
+            <h1 class="app-title">
+                <i class="fas fa-code-compare"></i>
+                برنامه مقایسه کننده متون
+            </h1>
+            <p class="app-subtitle">دو متن را مقایسه و تفاوت‌ها را تحلیل کنید</p>
+        </div>
+        
+        <div class="app-body">
+            <form method="POST" action="{% url 'index' %}" class="comparison-form">
+                {% csrf_token %}
+                <div class="text-input-group">
+                    <label for="text1">
+                        <i class="fas fa-pencil-alt"></i>
+                        متن اول:
+                    </label>
+                    <textarea id="text1" name="text1" required>{% if text1 %}{{ text1 }}{% endif %}</textarea>
+                </div>
+                
+                <div class="text-input-group">
+                    <label for="text2">
+                        <i class="fas fa-pencil-alt"></i>
+                        متن دوم (اصلی):
+                    </label>
+                    <textarea id="text2" name="text2" required>{% if text2 %}{{ text2 }}{% endif %}</textarea>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-code-compare"></i>
+                        مقایسه متون
+                    </button>
+                </div>
+            </form>
+            
+            {% if highlighted_words1 %}
+            <div class="results-section">
+                <div class="results-header">
+                    <h2 class="results-title">نتایج مقایسه</h2>
+                    <div class="cost-badge">
+                        هزینه تغییرات: {{ total_cost }}
+                    </div>
+                </div>
+                
+                <div class="text-comparison">
+                    <div class="text-card">
+                        <h3>متن دوم (با تغییرات):</h3>
+                        <div class="text-content">
+                            {% for word in highlighted_words1 %}
+                                {{ word|safe }}
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <div class="text-card">
+                        <h3>متن اول:</h3>
+                        <div class="text-content">
+                            {% for word in highlighted_words2 %}
+                                {{ word|safe }}
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="operations-list">
+                    <h3>عملیات‌ها:</h3>
+                    <ul>
+                        {% for op in operations_texts %}
+                            <li class="{% if 'Match' in op %}match{% elif 'Insert' in op %}insert{% elif 'Delete' in op %}delete{% elif 'Substitute' in op %}substitute{% endif %}">
+                                <i class="fas fa-{% if 'Match' in op %}check-circle{% elif 'Insert' in op %}plus-circle{% elif 'Delete' in op %}minus-circle{% elif 'Substitute' in op %}exchange-alt{% else %}info-circle{% endif %}"></i>
+                                {{ op|safe }}
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        
+        <div class="app-footer">
+            <div class="footer-content">
+                <a href="https://github.com/mroraie/ScriptDelta" target="_blank" class="github-link">
+                    <i class="fab fa-github"></i>
+                    کد پروژه در GitHub
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // افزودن انیمیشن برای عناصر هنگام لود صفحه
+        document.addEventListener('DOMContentLoaded', function() {
+            const formElements = document.querySelectorAll('.text-input-group, .form-actions');
+            formElements.forEach((element, index) => {
+                element.style.opacity = '0';
+                element.style.transform = 'translateY(20px)';
+                
+                setTimeout(() => {
+                    element.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+                    element.style.opacity = '1';
+                    element.style.transform = 'translateY(0)';
+                }, 100 * index);
+            });
+            
+            // اگر نتایجی وجود دارد، انیمیشن برای آنها نیز اضافه کنید
+            if (document.querySelector('.results-section')) {
+                const resultElements = document.querySelectorAll('.text-card, .operations-list');
+                resultElements.forEach((element, index) => {
+                    element.style.opacity = '0';
+                    element.style.transform = 'translateY(20px)';
+                    
+                    setTimeout(() => {
+                        element.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+                        element.style.opacity = '1';
+                        element.style.transform = 'translateY(0)';
+                    }, 100 * index + 300);
+                });
+            }
+        });
+    </script>
+</body>
+</html>
