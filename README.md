@@ -8,7 +8,7 @@ This is a Django-based web application for advanced **text comparison and simila
 - 🔊 **Phonetic Comparison** (similar sounding words)
 - 📊 **Graph-Based Visualization** of edit operations
 - 💡 **Highlighted Differences** in words and sounds
-- 🧠 **Custom Algorithm Modes**: `standard`, `phonetic`, `phonetic1`, `persian`
+- 🧠 **Custom Algorithm Modes**: `standard`, `phonetic`
 - 🌐 **Web UI** for input and comparison
 - ⚙️ **RESTful API** for programmatic access
 - 📉 **Similarity Score Calculation** (percentage)
@@ -25,5 +25,5 @@ This is a Django-based web application for advanced **text comparison and simila
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/your-username/your-repo.git
-   cd your-repo
+   git clone ""
+   cd textdiff
