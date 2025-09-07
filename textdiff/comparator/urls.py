@@ -4,6 +4,7 @@ from . import views
 urlpatterns = [
     path('', views.index, name='index'),
     path('compare/', views.compare, name='compare'),
+    path('info/', views.info, name='info'),
     path('api/compare/', views.api_compare, name='api_compare'),
     path('download-report/', views.download_report_view, name='download_report'),
     path('graph/', views.graph_view, name='graph'),

@@ -1,13 +1,17 @@
-# preprocessing.py
-
 import logging
 from comparator.algorithms.constants import SET_A, ALEF_VARIANTS, PHONETIC_MAPPING, VOWELS, DIACRITICS
 from comparator.algorithms.logs_setting import get_logger
+from django.conf import settings
+from django.contrib import messages
+from django.shortcuts import redirect
 
 logger = get_logger(__name__, 'preprocessing.log')
 
+MAX_TEXT_LENGTH = getattr(settings, "MAX_TEXT_LENGTH", 10000)
+MAX_WORDS = getattr(settings, "MAX_WORDS", 2000)
+
+
 def log_function_call(func):
-    """دکوراتور برای لاگ‌گیری ورودی و خروجی توابع"""
     def wrapper(*args, **kwargs):
         logger.debug(f"Entering {func.__name__} with args: {args}, kwargs: {kwargs}")
         
@@ -21,18 +25,9 @@ def log_function_call(func):
     
     return wrapper
 
+
 @log_function_call
 def clean_word(word: str) -> tuple[str, list[str]]:
-    """
-    Remove ignorable characters from a word and return cleaned word 
-    along with a list of removed characters.
-
-    Args:
-        word: Input word to clean
-
-    Returns:
-        Tuple of (cleaned_word, removed_chars)
-    """
     logger.info(f"Cleaning word: '{word}'")
     
     removed_chars = []
@@ -49,48 +44,23 @@ def clean_word(word: str) -> tuple[str, list[str]]:
     logger.info(f"Cleaned word: '{cleaned_word}', removed chars: {removed_chars}")
     return cleaned_word, removed_chars
 
+
 @log_function_call
 def get_removed_chars(word: str) -> list[str]:
-    """
-    Return a list of ignorable characters removed from the word based on SET_A.
-
-    Args:
-        word: Input word
-
-    Returns:
-        List of removed characters
-    """
     logger.info(f"Getting removed chars from word: '{word}'")
     
     result = [c for c in word if c in (SET_A - {' ', 'ـ'})]
     logger.info(f"Removed chars: {result}")
     return result
 
+
 @log_function_call
 def is_diacritic(char: str) -> bool:
-    """
-    Check if a character is a diacritic mark.
-
-    Args:
-        char: Character to check
-
-    Returns:
-        True if character is a diacritic, else False
-    """
     return char in DIACRITICS
+
 
 @log_function_call
 def is_phonetically_silent_vav(word: str, pos: int) -> bool:
-    """
-    Check if 'و' at given position is phonetically silent in Persian.
-
-    Args:
-        word: Input word
-        pos: Position of character
-
-    Returns:
-        True if 'و' is phonetically silent, else False
-    """
     logger.info(f"Checking silent vav in word: '{word}' at position: {pos}")
     
     if not isinstance(word, str):
@@ -113,23 +83,9 @@ def is_phonetically_silent_vav(word: str, pos: int) -> bool:
     logger.debug("Vav is not silent")
     return False
 
+
 @log_function_call
 def convert_to_phonetic(text: str) -> str:
-    """
-    Convert Persian/Arabic text to an English-friendly phonetic representation.
-    
-    Features:
-        - Handles context-based vowels (e.g., 'و' after certain letters -> 'u')
-        - Converts double letters like 'شش' -> 'shsh' for better pronunciation
-        - Preserves unknown characters as-is
-        - Simple rules for diacritics if present
-    
-    Args:
-        text: Input Persian/Arabic text
-        
-    Returns:
-        str: Phonetic representation
-    """
     logger.info(f"Converting to phonetic: '{text}'")
     
     phonetic = []
@@ -139,22 +95,19 @@ def convert_to_phonetic(text: str) -> str:
     while i < length:
         char = text[i]
         
-        # Context-aware handling for 'و'
         if char == 'و':
             if i > 0 and text[i-1] in {'خ', 'ح', 'غ', 'ع'}:
                 logger.debug(f"Converting 'و' to 'u' at position {i}")
-                phonetic.append('u')  # e.g., خو -> khu
+                phonetic.append('u')
             else:
                 logger.debug(f"Converting 'و' to 'v' at position {i}")
                 phonetic.append('v')
         
-        # Double letter handling (e.g., شش -> shsh)
         elif i+1 < length and char == text[i+1] and char in PHONETIC_MAPPING:
             logger.debug(f"Handling double letter '{char}' at position {i}")
             phonetic.append(PHONETIC_MAPPING[char]*2)
-            i += 1  # skip next char as it was handled
+            i += 1
         
-        # Diacritics - map to empty string (no phonetic value)
         elif char in DIACRITICS:
             logger.debug(f"Ignoring diacritic '{char}' at position {i}")
             phonetic.append('')
@@ -170,17 +123,9 @@ def convert_to_phonetic(text: str) -> str:
     logger.info(f"Phonetic conversion result: '{result}'")
     return result
 
-from django.conf import settings
-from django.contrib import messages
-from django.shortcuts import redirect
-
-# از settings مقادیر پیش‌فرض میگیریم
-MAX_TEXT_LENGTH = getattr(settings, "MAX_TEXT_LENGTH", 10000)
-MAX_WORDS = getattr(settings, "MAX_WORDS", 2000)
 
 @log_function_call
 def validate_text_length(view_func):
-    """Decorator to validate text length before processing"""
     def wrapper(request, *args, **kwargs):
         logger.info(f"Validating text length for request: {request.method}")
         
@@ -199,8 +144,10 @@ def validate_text_length(view_func):
 
             if len(text1.split()) > MAX_WORDS or len(text2.split()) > MAX_WORDS:
                 error_msg = f"Too many words. Max allowed is {MAX_WORDS}."
+                
                 logger.warning(error_msg)
                 messages.error(request, error_msg)
+
                 return redirect("index")
 
         logger.info("Text validation passed")
@@ -208,24 +155,11 @@ def validate_text_length(view_func):
     
     return wrapper
 
-# لاگ‌گیری هنگام import ماژول
-logger.info("preprocessing.py module imported successfully")
-
 
 @log_function_call
 def process_text_step_by_step(text: str) -> dict:
-    """
-    Process text step by step and return results of each processing stage.
-    
-    Args:
-        text: Input text to process
-        
-    Returns:
-        Dictionary containing results of each processing step
-    """
     logger.info(f"Processing text step by step: '{text}'")
     
-    # مرحله 1: تمیز کردن متن و حذف کاراکترهای ناخواسته
     cleaned_words = []
     removed_chars_list = []
     for word in text.split():
@@ -234,20 +168,15 @@ def process_text_step_by_step(text: str) -> dict:
         removed_chars_list.append(removed_chars)
     
     cleaned_text = ' '.join(cleaned_words)
-    
-    # مرحله 2: تبدیل به نمایش فونتیک
     phonetic_text = convert_to_phonetic(cleaned_text)
     
-    # مرحله 3: پردازش کلمات به صورت جداگانه برای نمایش جزئیات
     word_details = []
     for i, word in enumerate(cleaned_text.split()):
-        # تشخیص واوهای ساکن
         silent_vav_positions = []
         for pos in range(len(word)):
             if word[pos] == 'و' and is_phonetically_silent_vav(word, pos):
                 silent_vav_positions.append(pos)
         
-        # تبدیل فونتیک برای هر کلمه
         phonetic_word = convert_to_phonetic(word)
         
         word_details.append({
@@ -267,3 +196,6 @@ def process_text_step_by_step(text: str) -> dict:
     
     logger.info(f"Step-by-step processing completed for text: '{text}'")
     return result
+
+
+logger.info("preprocessing.py module imported successfully")

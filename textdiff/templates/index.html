@@ -286,6 +286,67 @@
             color: #ccc;
             transform: translateY(-2px);
         }
+
+
+        .help-icon {
+            position: fixed;
+            right: 20px;
+            top: 20px;       /* فاصله از بالا */
+            background: #facc15; /* زرد */
+            color: #000;
+            padding: 15px;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            z-index: 9999;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* کادر راهنما */
+        .help-box {
+            position: fixed;
+            right: 80px;
+            bottom: 20px;
+            width: 300px;
+            background: #fef9c3; /* زرد روشن */
+            border: 2px solid #facc15;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+            display: none; /* ابتدا مخفی */
+            z-index: 9998;
+        }
+
+        .help-box h3 {
+            margin-top: 0;
+            margin-bottom: 10px;
+            color: #92400e;
+        }
+
+        .help-box p {
+            font-size: 0.95rem;
+            line-height: 1.4;
+            color: #78350f;
+        }
+
+        .help-box .close-btn {
+            display: inline-block;
+            margin-top: 15px;
+            background: #f59e0b;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .help-box .close-btn:hover {
+            background: #d97706;
+        }
+
         
         @media (max-width: 900px) {
             .comparison-form {
@@ -413,13 +474,47 @@
                 </div>
             </div>
             {% endif %}
+
+            <!-- آیکون شناور راهنما -->
+            <div class="help-icon" id="helpIcon">
+                <i class="fas fa-lightbulb"></i>
+            </div>
+
+            <!-- کادر راهنما -->
+            <div class="help-box" id="helpBox">
+
+                <h3>راهنما</h3>
+
+                <p>
+                    این برنامه برای مقایسه دو متن طراحی شده است. متن اول را وارد کنید و متن دوم (اصلی) را وارد کنید، 
+                    سپس روی دکمه "مقایسه متون" کلیک کنید تا تفاوت‌ها و هزینه تغییرات نمایش داده شود.
+                    این برنامه بر اساس الگوریتم پیشرفته <a href="https://en.wikipedia.org/wiki/Levenshtein_distance" target="_blank">Levenshtein</a> ساخته شده و برای بررسی و مقایسه متن‌ها از چندین پردازش استفاده می‌کند: 
+                    <ol>
+                        <li>ابتدا پیش‌پردازش انجام می‌شود.</li>
+                        <li>سپس عملیات <strong>alignment</strong> انجام می‌شود.</li>
+                        <li>در صورت نیاز، متن‌ها برای هایلایت انتخاب می‌شوند.</li>
+                        <li>در نهایت فایل به <strong>comparator</strong> وارد می‌شود تا الگوریتم Levenshtein و پردازش‌های مربوطه اجرا شود.</li>
+                    </ol>
+                    برای مطالعه بیشتر، می‌توانید 
+                    <a href="{% url 'info' %}" target="_blank">گزارش کار این پروژه</a> 
+                    را مشاهده کنید.
+                </p>
+
+                <div class="close-btn" id="closeHelp">بستن</div>
+            </div>
+
         </div>
         
         <div class="app-footer">
             <div class="footer-content">
-                <a href="https://github.com/mroraie/ScriptDelta" target="_blank" class="github-link">
+                <a href="https://github.com/mroraie/textdiff" target="_blank" class="github-link">
                     <i class="fab fa-github"></i>
                     کد پروژه در GitHub
+                </a>
+
+                <a href="https://mroraie.com" target="_blank" class="developer-link">
+                    <i class="fas fa-user"></i>
+                    توسعه‌دهنده
                 </a>
             </div>
         </div>
@@ -454,6 +549,19 @@
                     }, 100 * index + 300);
                 });
             }
+
+            // کد مربوط به راهنما
+            const helpIcon = document.getElementById('helpIcon');
+            const helpBox = document.getElementById('helpBox');
+            const closeHelp = document.getElementById('closeHelp');
+
+            helpIcon.addEventListener('click', () => {
+                helpBox.style.display = 'block';
+            });
+
+            closeHelp.addEventListener('click', () => {
+                helpBox.style.display = 'none';
+            });
         });
     </script>
 </body>

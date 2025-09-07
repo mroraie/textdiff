@@ -13,7 +13,7 @@ from django.utils.http import urlencode
 
 from comparator.algorithms.comparator import TextComparator
 from comparator.algorithms.preprocessing import process_text_step_by_step
-from comparator.algorithms.alignment import align_texts_step_by_step
+from comparator.algorithms.alignment import align_texts_step_by_step , compute_levenshtein_with_path
 from comparator.algorithms.report import (
     generate_comparison_report,
     save_report_to_markdown,
@@ -64,7 +64,6 @@ def index(request):
     return render(request, "index.html", {"now": datetime.now()})
 
 
-@validate_text_length
 def compare(request):
     text1 = request.GET.get("text1", "").strip()
     text2 = request.GET.get("text2", "").strip()
@@ -73,29 +72,39 @@ def compare(request):
         messages.error(request, "No text found for comparison.")
         return redirect("index")
 
+    # Validate text length
+    if len(text1) > MAX_TEXT_LENGTH or len(text2) > MAX_TEXT_LENGTH:
+        messages.error(request, f"Texts must be shorter than {MAX_TEXT_LENGTH} characters.")
+        return redirect("index")
+    
+    # Validate word count
+    word_count1 = len(text1.split())
+    word_count2 = len(text2.split())
+    if word_count1 > MAX_WORDS or word_count2 > MAX_WORDS:
+        messages.error(request, f"Texts must contain fewer than {MAX_WORDS} words.")
+        return redirect("index")
+
     try:
         comparator = TextComparator(text1, text2)
         processing_steps_1 = process_text_step_by_step(text1)
         processing_steps_2 = process_text_step_by_step(text2)
         alignment_steps = align_texts_step_by_step(text1, text2)
 
-        highlighted_std1, highlighted_std2, cost_std, ops_std = comparator.compare_texts(
-            mode="standard"
-        )
-        highlighted_ph1, highlighted_ph2, cost_ph, ops_ph = comparator.compare_texts(
-            mode="phonetic"
-        )
-        highlighted_p1, highlighted_p2, cost_p1, ops_p1 = comparator.compare_texts(
-            mode="phonetic1"
-        )
-        highlighted_per1, highlighted_per2, cost_per, ops_per = comparator.compare_texts(
-            mode="persian"
-        )
+        # Standard comparison
+        highlighted_std1, highlighted_std2, cost_std, ops_std = comparator.compare_texts(mode="standard")
+        
+        # Phonetic comparison
+        highlighted_ph1, highlighted_ph2, cost_ph, ops_ph = comparator.compare_texts(mode="phonetic")
+        
+        # Phonetic1 comparison
+        highlighted_p1, highlighted_p2, cost_p1, ops_p1 = comparator.compare_texts(mode="phonetic1")
+        
+        # Persian comparison
+        highlighted_per1, highlighted_per2, cost_per, ops_per = comparator.compare_texts(mode="persian")
 
+        # Create operations table for standard comparison
         operations_table = []
-        for i, (w1, w2, op) in enumerate(
-            zip(highlighted_std1, highlighted_std2, ops_std), start=1
-        ):
+        for i, (w1, w2, op) in enumerate(zip(highlighted_std1, highlighted_std2, ops_std), start=1):
             if isinstance(op, tuple) and len(op) >= 3:
                 op_type, _, _ = op
                 if op_type == "match":
@@ -111,20 +120,17 @@ def compare(request):
             else:
                 description = f"Unknown operation at position {i}"
 
-            operations_table.append(
-                {
-                    "num": i,
-                    "word1": w1,
-                    "word2": w2,
-                    "operation": str(op),
-                    "description": description,
-                }
-            )
+            operations_table.append({
+                "num": i,
+                "word1": w1,
+                "word2": w2,
+                "operation": str(op),
+                "description": description,
+            })
 
+        # Create phonetic operations table
         phonetic_operations_table = []
-        for i, (w1, w2, op) in enumerate(
-            zip(highlighted_ph1, highlighted_ph2, ops_ph), start=1
-        ):
+        for i, (w1, w2, op) in enumerate(zip(highlighted_ph1, highlighted_ph2, ops_ph), start=1):
             if isinstance(op, tuple) and len(op) >= 3:
                 op_type, _, _ = op
                 if op_type == "match":
@@ -140,16 +146,15 @@ def compare(request):
             else:
                 description = f"Unknown phonetic operation at position {i}"
 
-            phonetic_operations_table.append(
-                {
-                    "num": i,
-                    "word1": w1,
-                    "word2": w2,
-                    "operation": str(op),
-                    "description": description,
-                }
-            )
+            phonetic_operations_table.append({
+                "num": i,
+                "word1": w1,
+                "word2": w2,
+                "operation": str(op),
+                "description": description,
+            })
 
+        # Character comparison table
         char_table = []
         max_len = max(len(text1), len(text2))
         for i in range(max_len):
@@ -157,6 +162,7 @@ def compare(request):
             char2 = text2[i] if i < len(text2) else ""
             char_table.append((char1, char2))
 
+        # Phonetic character conversion
         def get_phonetic_representation(char):
             return PHONETIC_MAPPING.get(char, DEFAULT_PHONETIC)
 
@@ -180,10 +186,9 @@ def compare(request):
             char2 = phonetic_chars2[i] if i < len(phonetic_chars2) else ""
             phonetic_char_table.append((char1, char2))
 
+        # Word transformation data for visualization
         word_transformation_data = []
-        for i, (word1, word2, op) in enumerate(
-            zip(highlighted_std1, highlighted_std2, ops_std)
-        ):
+        for i, (word1, word2, op) in enumerate(zip(highlighted_std1, highlighted_std2, ops_std)):
             if isinstance(op, tuple) and len(op) >= 3:
                 op_type, _, _ = op
                 operations_list = []
@@ -196,19 +201,22 @@ def compare(request):
                 elif op_type == "delete":
                     operations_list = ["Delete"] * len(word1)
 
-                word_transformation_data.append(
-                    {
-                        "word1": word1,
-                        "word2": word2,
-                        "operations": operations_list,
-                        "index": i,
-                    }
-                )
+                word_transformation_data.append({
+                    "word1": word1,
+                    "word2": word2,
+                    "operations": operations_list,
+                    "index": i,
+                })
 
+        # Get current time in Jalali calendar
         now_gregorian = datetime.now()
         now_jalali = jdatetime.datetime.fromgregorian(datetime=now_gregorian)
         now_jalali_str = now_jalali.strftime("%Y-%m-%d %H:%M:%S")
 
+        # Calculate Levenshtein distance
+        distance, operations = compute_levenshtein_with_path(text1, text2)
+
+        # Prepare context
         context = {
             "highlighted1": highlighted_std1,
             "highlighted2": highlighted_std2,
@@ -218,37 +226,41 @@ def compare(request):
             "phonetic_lis2": highlighted_ph2,
             "phonetic_operations_table": phonetic_operations_table,
             "phonetic_cost": cost_ph,
-            "phonetic1_lis1": highlighted_p1,
-            "phonetic1_lis2": highlighted_p2,
+
+            "phonetic1_cost": cost_p1,
             "phonetic1_similarity": round(
                 (1 - cost_p1 / max(len(text1.split()), len(text2.split()))) * 100, 2
-            ),
+            ) if max(len(text1.split()), len(text2.split())) > 0 else 100,
             "persian_lis1": highlighted_per1,
             "persian_lis2": highlighted_per2,
+            "persian_cost": cost_per,
             "persian_similarity": round(
                 (1 - cost_per / max(len(text1.split()), len(text2.split()))) * 100, 2
-            ),
+            ) if max(len(text1.split()), len(text2.split())) > 0 else 100,
             "char_table": char_table,
             "phonetic_char_table": phonetic_char_table,
             "word_transformation_data": json.dumps(word_transformation_data),
             "text1": text1,
             "text2": text2,
-            "text1_word_count": len(text1.split()),
-            "text2_word_count": len(text2.split()),
+            "text1_word_count": word_count1,
+            "text2_word_count": word_count2,
             "now": now_jalali_str,
             "max_text_length": MAX_TEXT_LENGTH,
             "max_words": MAX_WORDS,
             "processing_steps_1": processing_steps_1,
             "processing_steps_2": processing_steps_2,
             "alignment_steps": alignment_steps,
+            "levenshtein_distance": distance,
+            "levenshtein_operations": operations,
         }
 
         return render(request, "results.html", context)
 
     except Exception as e:
         logger.error(f"Error during comparison: {str(e)}", exc_info=True)
-        messages.error(request, "Error processing texts. Please check your input.")
+        messages.error(request, f"Error processing texts: {str(e)}")
         return redirect("index")
+
 
 
 @require_http_methods(["POST"])
@@ -327,6 +339,54 @@ def download_report_view(request):
         messages.error(request, "Error generating report. Please try again.")
         return redirect("index")
 
+def _generate_phonetic_graph_data(text1, text2):
+    """ایجاد داده‌های گراف برای مقایسه آوایی"""
+    # تبدیل متن به نمایش آوایی (فونتیک)
+    phonetic1 = _convert_to_phonetic(text1)
+    phonetic2 = _convert_to_phonetic(text2)
+    
+    # فقط از منطق کلمه استفاده می‌کنیم
+    return _generate_word_graph_data(phonetic1, phonetic2)
+
+def _generate_persian_graph_data(text1, text2):
+    """ایجاد داده‌های گراف برای پردازش ویژه فارسی"""
+    # پردازش ویژه برای زبان فارسی (مثلاً نرمال‌سازی)
+    processed1 = _normalize_persian_text(text1)
+    processed2 = _normalize_persian_text(text2)
+    
+    # فقط از منطق کلمه استفاده می‌کنیم
+    return _generate_word_graph_data(processed1, processed2)
+
+def _convert_to_phonetic(text):
+    """تبدیل متن به نمایش آوایی (فونتیک)"""
+    # اینجا باید الگوریتم تبدیل به فونتیک را پیاده‌سازی کنید
+    # این یک پیاده‌سازی ساده است که باید با الگوریتم واقعی جایگزین شود
+    phonetic_map = {
+        'c': 'k', 'q': 'k', 'x': 'ks',
+        'ph': 'f', 'gh': 'g', 'rh': 'r',
+        # می‌توانید نقشه کاملتری ایجاد کنید
+    }
+    
+    result = text.lower()
+    for key, value in phonetic_map.items():
+        result = result.replace(key, value)
+    
+    return result
+
+def _normalize_persian_text(text):
+    """نرمال‌سازی متن فارسی"""
+    # نرمال‌سازی حروف فارسی (مثلاً حروف مختلف با یک شکل)
+    normalization_map = {
+        'ك': 'ک', 'ي': 'ی', 'ة': 'ه', 'ۀ': 'ه',
+        'أ': 'ا', 'إ': 'ا', 'آ': 'ا', 'ؤ': 'و',
+        'ئ': 'ی', '': ''
+    }
+    
+    result = text
+    for key, value in normalization_map.items():
+        result = result.replace(key, value)
+    
+    return result
 
 def graph_view(request):
     text1 = request.GET.get('text1', '')
@@ -342,11 +402,17 @@ def graph_view(request):
 def api_graph_data(request):
     text1 = request.GET.get('text1', '')
     text2 = request.GET.get('text2', '')
+    mode = request.GET.get('mode', 'standard')  # دریافت پارامتر mode
     
     try:
-        if ' ' in text1 or ' ' in text2:
-            graph_data = _generate_sentence_graph_data(text1, text2)
+        if mode == 'phonetic':
+            # پردازش فونتیک (آوایی)
+            graph_data = _generate_phonetic_graph_data(text1, text2)
+        elif mode == 'persian':
+            # پردازش ویژه فارسی
+            graph_data = _generate_persian_graph_data(text1, text2)
         else:
+            # حالت استاندارد
             graph_data = _generate_word_graph_data(text1, text2)
         
         return JsonResponse(graph_data)
@@ -524,179 +590,6 @@ def _generate_word_graph_data(word1, word2):
     }
 
 
-def _generate_sentence_graph_data(sentence1, sentence2):
-    words1 = sentence1.split()
-    words2 = sentence2.split()
-    
-    operations = _simulate_sentence_operations(words1, words2)
-    
-    nodes = []
-    edges = []
-    
-    nodes.append({
-        'id': 'source_text',
-        'label': sentence1,
-        'type': 'source_text',
-        'color': '#69b3a2',
-        'size': 25
-    })
-    
-    nodes.append({
-        'id': 'target_text',
-        'label': sentence2,
-        'type': 'target_text',
-        'color': '#ff6b6b',
-        'size': 25
-    })
-    
-    for i, word in enumerate(words1):
-        node_id = f"src_word_{i}"
-        nodes.append({
-            'id': node_id,
-            'label': word,
-            'type': 'source_word',
-            'color': '#a1d99b',
-            'size': 15,
-            'position': i
-        })
-        
-        edges.append({
-            'source': 'source_text',
-            'target': node_id,
-            'label': 'contains',
-            'color': '#69b3a2',
-            'width': 1,
-            'dashes': True
-        })
-    
-    for j, word in enumerate(words2):
-        node_id = f"tgt_word_{j}"
-        nodes.append({
-            'id': node_id,
-            'label': word,
-            'type': 'target_word',
-            'color': '#fdae6b',
-            'size': 15,
-            'position': j
-        })
-        
-        edges.append({
-            'source': 'target_text',
-            'target': node_id,
-            'label': 'contains',
-            'color': '#ff6b6b',
-            'width': 1,
-            'dashes': True
-        })
-    
-    op_count = 0
-    stats = {'matches': 0, 'substitutes': 0, 'deletes': 0, 'inserts': 0}
-    
-    for op in operations:
-        op_type = op[0]
-        i = op[1] if len(op) > 1 else None
-        j = op[2] if len(op) > 2 else None
-        
-        op_id = f"op_{op_count}"
-        op_label = _get_operation_label(op_type, 
-                                       words1[i] if i is not None and i < len(words1) else "", 
-                                       words2[j] if j is not None and j < len(words2) else "", 
-                                       i, j)
-        op_color = _get_operation_color(op_type)
-        
-        if op_type == 'match':
-            stats['matches'] += 1
-        elif op_type == 'substitute':
-            stats['substitutes'] += 1
-        elif op_type == 'delete':
-            stats['deletes'] += 1
-        elif op_type == 'insert':
-            stats['inserts'] += 1
-        
-        nodes.append({
-            'id': op_id,
-            'label': op_label,
-            'type': 'operation',
-            'color': op_color,
-            'size': 12
-        })
-        
-        if op_type in ['match', 'substitute']:
-            edges.append({
-                'source': f"src_word_{i}",
-                'target': op_id,
-                'label': 'from',
-                'color': op_color,
-                'width': 2
-            })
-            
-            edges.append({
-                'source': op_id,
-                'target': f"tgt_word_{j}",
-                'label': 'to',
-                'color': op_color,
-                'width': 2
-            })
-        elif op_type == 'delete':
-            edges.append({
-                'source': f"src_word_{i}",
-                'target': op_id,
-                'label': 'deleted',
-                'color': op_color,
-                'width': 2
-            })
-        elif op_type == 'insert':
-            edges.append({
-                'source': op_id,
-                'target': f"tgt_word_{j}",
-                'label': 'inserted',
-                'color': op_color,
-                'width': 2
-            })
-        
-        op_count += 1
-    
-    stats_node = {
-        'id': 'stats',
-        'label': f"Conversion Statistics\nOperations count: {len(operations)}\n"
-                f"Matches: {stats['matches']}\nSubstitutes: {stats['substitutes']}\n"
-                f"Deletes: {stats['deletes']}\nInserts: {stats['inserts']}",
-        'type': 'statistics',
-        'color': '#9ecae1',
-        'size': 20
-    }
-    nodes.append(stats_node)
-    
-    edges.append({
-        'source': 'stats',
-        'target': 'source_text',
-        'label': 'analysis',
-        'color': '#9ecae1',
-        'width': 2,
-        'dashes': [5, 5]
-    })
-    
-    edges.append({
-        'source': 'stats',
-        'target': 'target_text',
-        'label': 'analysis',
-        'color': '#9ecae1',
-        'width': 2,
-        'dashes': [5, 5]
-    })
-    
-    return {
-        'nodes': nodes,
-        'edges': edges,
-        'metadata': {
-            'text1': sentence1,
-            'text2': sentence2,
-            'type': 'sentence_comparison',
-            'operations_count': len(operations),
-            'stats': stats
-        }
-    }
-
 
 def _simulate_word_operations(word1, word2):
     operations = []
@@ -724,30 +617,6 @@ def _simulate_word_operations(word1, word2):
     return operations
 
 
-def _simulate_sentence_operations(words1, words2):
-    operations = []
-    len1, len2 = len(words1), len(words2)
-    i, j = 0, 0
-    
-    while i < len1 and j < len2:
-        if words1[i] == words2[j]:
-            operations.append(('match', i, j))
-            i += 1
-            j += 1
-        else:
-            operations.append(('substitute', i, j))
-            i += 1
-            j += 1
-    
-    while i < len1:
-        operations.append(('delete', i))
-        i += 1
-    
-    while j < len2:
-        operations.append(('insert', j))
-        j += 1
-    
-    return operations
 
 
 def _get_operation_label(op_type, item1, item2, i, j):
@@ -768,3 +637,13 @@ def _get_operation_color(op_type):
         'insert': '#377eb8',
     }
     return color_map.get(op_type, '#999999')
+
+
+# views.py
+from django.shortcuts import render
+
+def info(request):
+    """
+    Simple view to render the info.html template.
+    """
+    return render(request, 'info.html')

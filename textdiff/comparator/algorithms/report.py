@@ -2,9 +2,10 @@
 from datetime import datetime
 import os
 
-def generate_comparison_report(text1, text2, highlighted_text1, highlighted_text2, operations, total_cost, mode):
+def generate_comparison_report(text1, text2, highlighted_text1, highlighted_text2, operations, total_cost, mode, preprocessing1=None, preprocessing2=None):
     """
     Generates a report dictionary containing all information about comparison.
+    Includes preprocessing results.
     """
     report = {
         'text1': text1,
@@ -14,93 +15,99 @@ def generate_comparison_report(text1, text2, highlighted_text1, highlighted_text
         'total_cost': total_cost,
         'operations': operations,
         'mode': mode,
-        'timestamp': datetime.now().isoformat()
+        'timestamp': datetime.now().isoformat(),
+        'preprocessing1': preprocessing1,
+        'preprocessing2': preprocessing2
     }
     return report
 
-def save_report_to_markdown(report, filename="comparison_report.md"):
-    """
-    Save the report as a Markdown file with emoji-based highlights and summary.
-    """
-    # شمارش انواع عملیات
-    total_ops = len(report['operations'])
 
-    # فرض بر این است که اولین عنصر tuple نوع عملیات است
+def save_report_to_markdown(report):
+    """
+    Save the report as a Markdown file (in Persian).
+    Filename includes current datetime.
+    """
+    from datetime import datetime
+    import os
+
+    total_ops = len(report['operations'])
     match_count = sum(1 for op in report['operations'] if len(op) > 0 and 'match' in str(op[0]).lower())
     insert_count = sum(1 for op in report['operations'] if len(op) > 0 and 'insert' in str(op[0]).lower())
     delete_count = sum(1 for op in report['operations'] if len(op) > 0 and 'delete' in str(op[0]).lower())
     substitute_count = sum(1 for op in report['operations'] if len(op) > 0 and 'substitute' in str(op[0]).lower())
 
-    
-    # نمودار متنی ساده
     def text_bar(count):
-        length = 20  # طول ماکزیمم نمودار
+        length = 20
         filled = int((count / total_ops) * length) if total_ops else 0
-        return '*' * filled + '-' * (length - filled)
+        return '█' * filled + '░' * (length - filled)
 
-    md_content = f"""# 📊 Comparison Report
+    md_content = f"""# گزارش مقایسه متون
 
-## 📋 Metadata
-| Parameter | Value |
-|-----------|-------|
-| **Mode** | `{report['mode']}` |
-| **Timestamp** | `{report['timestamp']}` |
-| **Total Cost** | `{report['total_cost']:.2f}` |
-| **Total Operations** | `{total_ops}` |
+## اطلاعات کلی
+| ویژگی | مقدار |
+|-------|--------|
+| حالت مقایسه | `{report['mode']}` |
+| زمان تولید | `{report['timestamp']}` |
+| هزینه کلی | `{report['total_cost']:.2f}` |
+| تعداد کل عملیات | `{total_ops}` |
 
-## 📝 Original Texts
-
-**Text 1:**  
+## متون اصلی
+**متن ۱:**  
 {report['text1']}
 
-**Text 2:**  
+**متن ۲:**  
 {report['text2']}
 
-## 🔹 Highlighted Texts (Emoji)
-Legend: 🔴 Delete | 🟢 Match | 🔵 Insert | 🟡 Substitute
-
-**Text 1 Highlighted:**  
+## متون هایلایت‌شده
+**متن ۱:**  
 {report['highlighted_text1']}
 
-**Text 2 Highlighted:**  
+**متن ۲:**  
 {report['highlighted_text2']}
 
-## 📊 Operations Summary
-| Operation | Count | Percentage | Visual |
-|-----------|-------|-----------|--------|
-| Match 🔢 | {match_count} | {(match_count/total_ops*100 if total_ops else 0):.1f}% | {text_bar(match_count)} |
-| Insert ➕ | {insert_count} | {(insert_count/total_ops*100 if total_ops else 0):.1f}% | {text_bar(insert_count)} |
-| Delete ➖ | {delete_count} | {(delete_count/total_ops*100 if total_ops else 0):.1f}% | {text_bar(delete_count)} |
-| Substitute 🟡 | {substitute_count} | {(substitute_count/total_ops*100 if total_ops else 0):.1f}% | {text_bar(substitute_count)} |
-| **Total** | {total_ops} | 100% | {'*'*20} |
+## خلاصه عملیات
+| نوع عملیات | تعداد | درصد | نمودار |
+|------------|-------|-------|---------|
+| تطابق | {match_count} | {(match_count/total_ops*100 if total_ops else 0):.1f}% | {text_bar(match_count)} |
+| درج | {insert_count} | {(insert_count/total_ops*100 if total_ops else 0):.1f}% | {text_bar(insert_count)} |
+| حذف | {delete_count} | {(delete_count/total_ops*100 if total_ops else 0):.1f}% | {text_bar(delete_count)} |
+| جایگزینی | {substitute_count} | {(substitute_count/total_ops*100 if total_ops else 0):.1f}% | {text_bar(substitute_count)} |
+| **مجموع** | {total_ops} | 100% | {'█'*20} |
 
-## 📝 Detailed Operations
-| Step | Operation |
-|------|-----------|
+## جزئیات عملیات
+| گام | عملیات |
+|-----|---------|
 """
-    # اضافه کردن عملیات جزئی
     for i, op in enumerate(report['operations']):
         md_content += f"| {i+1} | `{op}` |\n"
 
-    md_content += f"\n---\n*Report generated automatically - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}*\n"
+    def render_preprocessing(pre, title):
+        if not pre:
+            return ""
+        block = f"\n## پیش‌پردازش {title}\n"
+        block += f"- متن اصلی: {pre['original_text']}\n"
+        block += f"- متن تمیز شده: {pre['cleaned_text']}\n"
+        block += f"- متن آوایی: {pre['phonetic_text']}\n"
+        block += "\n### جزئیات کلمات\n"
+        block += "| کلمه | تمیز شده | آوایی | حروف حذف‌شده | موقعیت‌های واو ساکت |\n"
+        block += "|-------|-----------|-------|----------------|----------------------|\n"
+        for word in pre['word_details']:
+            block += f"| {word['original']} | {word['cleaned']} | {word['phonetic']} | {','.join(word['removed_chars']) if word['removed_chars'] else '-'} | {word['silent_vav_positions']} |\n"
+        return block
 
-    # ایجاد پوشه reports اگر وجود ندارد
+    md_content += render_preprocessing(report.get("preprocessing1"), "متن ۱")
+    md_content += render_preprocessing(report.get("preprocessing2"), "متن ۲")
+
+    md_content += f"\n---\n*این گزارش به صورت خودکار تولید شد - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}*\n"
+
     os.makedirs('reports', exist_ok=True)
-    
-    # ذخیره فایل
+
+    # نام فایل شامل تاریخ و زمان
+    timestamp_str = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    filename = f"comparison_report_{timestamp_str}.md"
     filepath = os.path.join('reports', filename)
+
     with open(filepath, 'w', encoding='utf-8') as f:
         f.write(md_content)
-    
+
     return filepath
-
-# === نسخه وب برای Django ===
-from django.http import FileResponse
-
-def download_report(report):
-    """
-    Generate Markdown report and return as downloadable file in Django.
-    """
-    filename = f"comparison_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md"
-    filepath = save_report_to_markdown(report, filename)
-    return FileResponse(open(filepath, 'rb'), as_attachment=True, filename=filename)

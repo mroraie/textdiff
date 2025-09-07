@@ -320,3 +320,11 @@ def calculate_similarity_score(words1: List[str], words2: List[str],
     similarity = len(similarity_pairs) / max_len
     logger.debug(f"Similarity score calculated: {similarity:.2f} ({len(similarity_pairs)}/{max_len})")
     return similarity
+
+
+def compute_levenshtein_with_path(seq1: List[str], seq2: List[str]):
+    """
+    Wrapper for compatibility.
+    Returns distance and operations.
+    """
+    return levenshtein_with_path(seq1, seq2)

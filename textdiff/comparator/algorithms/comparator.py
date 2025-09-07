@@ -1,10 +1,9 @@
 # comparator.py
 
-from comparator.algorithms.preprocessing import clean_word, convert_to_phonetic, validate_text_length
-from comparator.algorithms.alignment import align_words, levenshtein_with_path
+from comparator.algorithms.preprocessing import convert_to_phonetic, validate_text_length
+from comparator.algorithms.alignment import align_words
 from comparator.algorithms.highlighting import highlight_aligned_words
-from comparator.algorithms.visualization import visualize_word_operations, visualize_sentence
-from comparator.algorithms.report import generate_comparison_report
+
 from comparator.algorithms.constants import DIACRITICS, IGNORE_COST, DIACRITIC_COLOR
 from django.contrib import messages
 from django.shortcuts import redirect, render

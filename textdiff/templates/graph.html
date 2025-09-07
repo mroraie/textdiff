@@ -1,201 +1,98 @@
+{% load static %}
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Text Transformation Graphs</title>
+    <title>Text Transformation Graph</title>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <style>
-        * {
-            font-family: 'Segoe UI', Tahoma, sans-serif;
-        }
-        
         body {
-            margin: 0;
-            padding: 20px;
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 0;
             background-color: #f8f9fa;
-            text-align: left;
         }
         
         .container {
             max-width: 1200px;
             margin: 0 auto;
             background-color: white;
-            border-radius: 10px;
             padding: 20px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
         
         h1 {
-            color: #2c3e50;
             text-align: center;
+            color: #2c3e50;
             margin-bottom: 20px;
         }
         
-        h2 {
-            color: #34495e;
-            margin-top: 30px;
-            margin-bottom: 15px;
-            border-bottom: 2px solid #ecf0f1;
-            padding-bottom: 10px;
-        }
-        
-        .legend {
-            display: flex;
-            justify-content: center;
-            margin: 15px 0;
-            flex-wrap: wrap;
-        }
-        
-        .legend-item {
-            display: flex;
-            align-items: center;
-            margin: 0 10px;
-        }
-        
-        .legend-color {
-            width: 15px;
-            height: 15px;
-            border-radius: 50%;
-            margin-right: 5px;
-        }
-        
-        .graph-section {
-            margin-bottom: 40px;
-        }
-        
         .graph-container {
-            height: 500px;
-            margin: 20px 0;
+            position: relative;
             border: 1px solid #ddd;
-            border-radius: 10px;
-            overflow: hidden;
+            border-radius: 6px;
             background-color: white;
+            padding: 15px;
+            margin-bottom: 20px;
         }
         
         .graph-controls {
-            padding: 15px;
-            background-color: #f5f5f5;
-            border-bottom: 1px solid #ddd;
-            text-align: center;
-        }
-        
-        .graph-visualization {
-            height: calc(100% - 60px);
-            overflow: auto;
-            position: relative;
-        }
-        
-        .graph-node {
-            stroke: #fff;
-            stroke-width: 1.5px;
-        }
-        
-        .graph-edge {
-            stroke: #999;
-            stroke-opacity: 0.6;
-        }
-        
-        .graph-edge-label {
-            font-size: 12px;
-            fill: #333;
-        }
-        
-        .graph-tooltip {
-            position: absolute;
-            text-align: center;
-            padding: 8px;
-            font: 12px sans-serif;
-            background: rgba(255, 255, 255, 0.95);
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            pointer-events: none;
-            opacity: 0;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-            max-width: 300px;
-            z-index: 100;
-        }
-        
-        .loading {
-            text-align: center;
-            padding: 20px;
-            font-size: 18px;
-            color: #3498db;
+            margin-bottom: 15px;
+            display: flex;
+            gap: 10px;
         }
         
         .btn {
-            padding: 8px 16px;
-            margin: 0 5px;
+            padding: 8px 15px;
             background-color: #3498db;
             color: white;
             border: none;
             border-radius: 4px;
             cursor: pointer;
+            font-size: 14px;
         }
         
-        .btn:hover {
-            background-color: #2980b9;
+        .graph-visualization {
+            position: relative;
+            height: 500px;
+            overflow: hidden;
+            border: 1px solid #eee;
+            border-radius: 4px;
+            background-color: #fcfcfc;
         }
         
-        .node-source_text {
-            fill: #69b3a2;
-            stroke: #2c7873;
-            r: 20;
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 16px;
+            color: #7f8c8d;
         }
         
-        .node-target_text {
-            fill: #ff6b6b;
-            stroke: #c0392b;
-            r: 20;
+        .graph-tooltip {
+            position: absolute;
+            padding: 10px;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            border-radius: 4px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 14px;
+            z-index: 100;
         }
         
-        .node-operation {
-            fill: #f39c12;
-            stroke: #e67e22;
-            r: 15;
+        .graph-node {
+            stroke: #fff;
+            stroke-width: 2px;
         }
         
-        .node-source_char, .node-source_word {
-            fill: #a1d99b;
-            stroke: #74c476;
-            r: 12;
-        }
-        
-        .node-target_char, .node-target_word {
-            fill: #fdae6b;
-            stroke: #f16913;
-            r: 12;
-        }
-        
-        .node-statistics {
-            fill: #9ecae1;
-            stroke: #6baed6;
-            r: 18;
-        }
-        
-        @media (max-width: 768px) {
-            .graph-container {
-                height: 400px;
-            }
-            
-            .btn {
-                margin: 5px;
-                width: 100%;
-            }
-            
-            .graph-controls {
-                display: flex;
-                flex-direction: column;
-            }
-            
-            .legend {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-            
-            .legend-item {
-                margin: 5px 0;
-            }
+        .graph-edge {
+            stroke-opacity: 0.7;
         }
     </style>
 </head>
@@ -203,77 +100,16 @@
     <div class="container">
         <h1>Text Transformation Analysis</h1>
         
-        <div class="legend">
-            <div class="legend-item">
-                <div class="legend-color" style="background-color: #69b3a2;"></div>
-                <span>Source Text</span>
+        <div class="graph-container" id="standard-graph">
+            <div class="graph-controls">
+                <button class="btn zoom-in">Zoom In</button>
+                <button class="btn zoom-out">Zoom Out</button>
+                <button class="btn reset-view">Reset View</button>
             </div>
-            <div class="legend-item">
-                <div class="legend-color" style="background-color: #ff6b6b;"></div>
-                <span>Target Text</span>
-            </div>
-            <div class="legend-item">
-                <div class="legend-color" style="background-color: #f39c12;"></div>
-                <span>Operation</span>
-            </div>
-            <div class="legend-item">
-                <div class="legend-color" style="background-color: #a1d99b;"></div>
-                <span>Source Element</span>
-            </div>
-            <div class="legend-item">
-                <div class="legend-color" style="background-color: #fdae6b;"></div>
-                <span>Target Element</span>
-            </div>
-        </div>
-        
-        <div class="graph-section">
-            <h2>Standard Comparison</h2>
-            <div class="graph-container" id="standard-graph">
-                <div class="graph-controls">
-                    <button class="btn zoom-in">Zoom In</button>
-                    <button class="btn zoom-out">Zoom Out</button>
-                    <button class="btn reset-view">Reset View</button>
-                    <button class="btn download-svg">Save Graph (SVG)</button>
-                </div>
-                <div class="graph-visualization">
-                    <div class="loading">Loading standard comparison graph...</div>
-                    <svg class="graph-svg" style="display: none;"></svg>
-                    <div class="graph-tooltip"></div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="graph-section">
-            <h2>Phonetic Comparison</h2>
-            <div class="graph-container" id="phonetic-graph">
-                <div class="graph-controls">
-                    <button class="btn zoom-in">Zoom In</button>
-                    <button class="btn zoom-out">Zoom Out</button>
-                    <button class="btn reset-view">Reset View</button>
-                    <button class="btn download-svg">Save Graph (SVG)</button>
-                </div>
-                <div class="graph-visualization">
-                    <div class="loading">Loading phonetic comparison graph...</div>
-                    <svg class="graph-svg" style="display: none;"></svg>
-                    <div class="graph-tooltip"></div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="graph-section">
-            <h2>Persian Comparison</h2>
-            <div class="graph-container" id="persian-graph">
-                <div class="graph-controls">
-                    <button class="btn zoom-in">Zoom In</button>
-                    <button class="btn zoom-out">Zoom Out</button>
-                    <button class="btn reset-view">Reset View</button>
-                    <button class="btn download-svg">Save Graph (SVG)</button>
-                </div>
-                <div class="graph-visualization">
-                    <div class="loading">Loading persian comparison graph...</div>
-                    <svg class="graph-svg" style="display: none;"></svg>
-                    <div class="graph-tooltip"></div>
-                </div>
+            <div class="graph-visualization">
+                <div class="loading">Loading standard comparison graph...</div>
+                <svg class="graph-svg" style="display: none;"></svg>
+                <div class="graph-tooltip"></div>
             </div>
         </div>
     </div>
@@ -284,36 +120,23 @@
             const text1 = urlParams.get('text1') || '';
             const text2 = urlParams.get('text2') || '';
             
-            fetchGraphData(text1, text2, 'standard', 'Standard Comparison');
-            fetchGraphData(text1, text2, 'phonetic', 'Phonetic Comparison');
-            fetchGraphData(text1, text2, 'persian', 'Persian Comparison');
+            if (text1 && text2) {
+                document.querySelector('h1').innerHTML += 
+                    `<br><small>"${text1}" → "${text2}"</small>`;
+            }
             
-            document.querySelectorAll('.zoom-in').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const graphId = this.closest('.graph-container').id;
-                    zoomIn(graphId);
-                });
+            fetchGraphData(text1, text2, 'standard');
+            
+            document.querySelector('.zoom-in').addEventListener('click', function() {
+                zoomIn('standard-graph');
             });
             
-            document.querySelectorAll('.zoom-out').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const graphId = this.closest('.graph-container').id;
-                    zoomOut(graphId);
-                });
+            document.querySelector('.zoom-out').addEventListener('click', function() {
+                zoomOut('standard-graph');
             });
             
-            document.querySelectorAll('.reset-view').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const graphId = this.closest('.graph-container').id;
-                    resetView(graphId);
-                });
-            });
-            
-            document.querySelectorAll('.download-svg').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const graphId = this.closest('.graph-container').id;
-                    downloadSVG(graphId);
-                });
+            document.querySelector('.reset-view').addEventListener('click', function() {
+                resetView('standard-graph');
             });
         });
 
@@ -321,25 +144,43 @@
         const svgs = {};
         const zooms = {};
 
-        function fetchGraphData(text1, text2, mode, title) {
-            fetch(`/api/graph-data/?text1=${encodeURIComponent(text1)}&text2=${encodeURIComponent(text2)}&mode=${mode}`)
-                .then(response => response.json())
+        function fetchGraphData(text1, text2, mode) {
+            const apiGraphDataUrl = "{% url 'api_graph_data' %}";
+
+            fetch(`${apiGraphDataUrl}?text1=${encodeURIComponent(text1)}&text2=${encodeURIComponent(text2)}&mode=${mode}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`Network response was not ok: ${response.status}`);
+                    }
+                    return response.json();
+                })
                 .then(data => {
                     const graphId = `${mode}-graph`;
+                    const container = document.querySelector(`#${graphId}`);
+
+                    container.setAttribute('data-mode', mode);
+                    container.setAttribute('data-text1', data.metadata.text1);
+                    container.setAttribute('data-text2', data.metadata.text2);
+
                     document.querySelector(`#${graphId} .loading`).style.display = 'none';
                     document.querySelector(`#${graphId} .graph-svg`).style.display = 'block';
-                    createGraphVisualization(data, graphId, title);
+
+                    createGraphVisualization(data, graphId);
                 })
                 .catch(error => {
                     console.error(`Error fetching ${mode} graph data:`, error);
-                    document.querySelector(`#${mode}-graph .loading`).textContent = `Error loading ${mode} graph data`;
+                    const errorMsg = document.querySelector(`#${mode}-graph .loading`);
+                    errorMsg.textContent = `Error loading graph data: ${error.message}`;
+                    errorMsg.style.color = '#e74c3c';
                 });
         }
 
-        function createGraphVisualization(data, graphId, title) {
+        function createGraphVisualization(data, graphId) {
             const container = document.querySelector(`#${graphId} .graph-visualization`);
             const width = container.clientWidth;
             const height = container.clientHeight;
+            
+            d3.select(`#${graphId} .graph-svg`).selectAll("*").remove();
             
             const svg = d3.select(`#${graphId} .graph-svg`)
                 .attr("width", width)
@@ -394,29 +235,17 @@
                 .text(d => d.label)
                 .attr("font-size", d => {
                     if (d.type === "source_text" || d.type === "target_text") return 12;
-                    return 10;
+                    return 8;
                 })
-                .attr("dx", 15)
-                .attr("dy", 4)
-                .attr("text-anchor", "start");
+                .attr("dx", 12)
+                .attr("dy", 4);
             
             node.on("mouseover", function(event, d) {
                 tooltip.transition()
                     .duration(200)
                     .style("opacity", .9);
                 
-                const typeNames = {
-                    "source_text": "Source Text",
-                    "target_text": "Target Text",
-                    "operation": "Operation",
-                    "source_char": "Source Character",
-                    "source_word": "Source Word",
-                    "target_char": "Target Character",
-                    "target_word": "Target Word",
-                    "statistics": "Conversion Statistics"
-                };
-                
-                tooltip.html(`<strong>${d.label}</strong><br/>Type: ${typeNames[d.type] || d.type}`)
+                tooltip.html(`<strong>${d.label}</strong><br/>Type: ${d.type}`)
                     .style("left", (event.pageX + 5) + "px")
                     .style("top", (event.pageY - 28) + "px");
             })
@@ -457,32 +286,27 @@
         }
 
         function zoomIn(graphId) {
-            svgs[graphId].transition().call(zooms[graphId].scaleBy, 1.5);
+            if (svgs[graphId]) {
+                svgs[graphId].transition().duration(750).call(zooms[graphId].scaleBy, 1.5);
+            }
         }
 
         function zoomOut(graphId) {
-            svgs[graphId].transition().call(zooms[graphId].scaleBy, 0.75);
+            if (svgs[graphId]) {
+                svgs[graphId].transition().duration(750).call(zooms[graphId].scaleBy, 0.75);
+            }
         }
 
         function resetView(graphId) {
-            svgs[graphId].transition().call(zooms[graphId].transform, d3.zoomIdentity);
-        }
-
-        function downloadSVG(graphId) {
-            const svgData = new XMLSerializer().serializeToString(svgs[graphId].node());
-            const blob = new Blob([svgData], {type: "image/svg+xml"});
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = `text_transformation_${graphId}.svg`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
+            if (svgs[graphId]) {
+                svgs[graphId].transition().duration(750).call(zooms[graphId].transform, d3.zoomIdentity);
+            }
         }
 
         function dragstarted(event, d, graphId) {
-            if (!event.active) simulations[graphId].alphaTarget(0.3).restart();
+            if (!event.active && simulations[graphId]) {
+                simulations[graphId].alphaTarget(0.3).restart();
+            }
             d.fx = d.x;
             d.fy = d.y;
         }
@@ -493,7 +317,9 @@
         }
         
         function dragended(event, d, graphId) {
-            if (!event.active) simulations[graphId].alphaTarget(0);
+            if (!event.active && simulations[graphId]) {
+                simulations[graphId].alphaTarget(0);
+            }
             d.fx = null;
             d.fy = null;
         }

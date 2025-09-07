@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>سیستم مقایسه متون - مستندات و گزارش</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <style>
+        body {
+            font-family: 'Vazirmatn', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.8;
+        }
+        .header {
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            color: white;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+        }
+        .section-title {
+            border-right: 5px solid #6a11cb;
+            padding-right: 15px;
+            margin: 30px 0 20px;
+        }
+        .function-box {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-right: 4px solid #6f42c1;
+        }
+        .function-title {
+            color: #6f42c1;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        .param-box {
+            background-color: #e9ecef;
+            border-radius: 6px;
+            padding: 10px;
+            margin: 10px 0;
+        }
+        .step-box {
+            background-color: #e8f4fd;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+            border-right: 4px solid #17a2b8;
+        }
+        .operation-item {
+            padding: 10px 15px;
+            margin-bottom: 8px;
+            border-radius: 8px;
+            background-color: #f8f9fa;
+            border-right: 4px solid transparent;
+        }
+        .operation-delete {
+            border-right-color: #dc3545;
+        }
+        .operation-insert {
+            border-right-color: #28a745;
+        }
+        .operation-substitute {
+            border-right-color: #6f42c1;
+        }
+        .operation-match {
+            border-right-color: #17a2b8;
+        }
+        .highlight-red {
+            background-color: #ffcccc;
+            padding: 0 3px;
+            border-radius: 3px;
+            text-decoration: line-through;
+        }
+        .highlight-green {
+            background-color: #ccffcc;
+            padding: 0 3px;
+            border-radius: 3px;
+        }
+        .highlight-blue {
+            background-color: #cce5ff;
+            padding: 0 3px;
+            border-radius: 3px;
+        }
+        .highlight-orange {
+            background-color: #ffe5cc;
+            padding: 0 3px;
+            border-radius: 3px;
+        }
+        .highlight-purple {
+            background-color: #e5ccff;
+            padding: 0 3px;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <!-- هدر صفحه -->
+    <div class="header text-center">
+        <div class="container">
+            <h1 class="display-4 fw-bold"><i class="bi bi-journal-code"></i> سیستم مقایسه متون</h1>
+            <p class="lead">پروژه نهایی درس ساختمان داده</p>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- ناوبری اصلی -->
+        <ul class="nav nav-tabs mb-4" id="mainTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="docs-tab" data-bs-toggle="tab" data-bs-target="#docs" type="button" role="tab">مستندات فنی</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="report-tab" data-bs-toggle="tab" data-bs-target="#report" type="button" role="tab">گزارش نمونه</button>
+            </li>
+        </ul>
+
+        <div class="tab-content" id="mainTabContent">
+            <!-- بخش مستندات -->
+            <div class="tab-pane fade show active" id="docs" role="tabpanel">
+                <!-- ناوبری بین ماژول‌ها -->
+                <ul class="nav nav-tabs mb-4" id="modulesTab" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="preprocessing-tab" data-bs-toggle="tab" data-bs-target="#preprocessing" type="button" role="tab">پیش‌پردازش</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="highlighting-tab" data-bs-toggle="tab" data-bs-target="#highlighting" type="button" role="tab">هم‌ترازی و هایلایت</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="reportgen-tab" data-bs-toggle="tab" data-bs-target="#reportgen" type="button" role="tab">تولید گزارش</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="process-tab" data-bs-toggle="tab" data-bs-target="#process" type="button" role="tab">روند اجرا</button>
+                    </li>
+                </ul>
+
+                <div class="tab-content" id="modulesTabContent">
+                    <!-- بخش پیش‌پردازش -->
+                    <div class="tab-pane fade show active" id="preprocessing" role="tabpanel">
+                        <h2 class="section-title">ماژول پیش‌پردازش متن (preprocessing.py)</h2>
+                        
+                        <div class="function-box">
+                            <div class="function-title">log_function_call(func)</div>
+                            <p>دکوراتور برای لاگ‌گیری ورودی و خروجی هر تابع. قبل و بعد از اجرای تابع، لاگ DEBUG می‌زند.</p>
+                        </div>
+                        
+                        <div class="function-box">
+                            <div class="function-title">clean_word(word)</div>
+                            <p>پاکسازی یک کلمه از کاراکترهای نادیده گرفته‌شده (SET_A - {' ', 'ـ'})</p>
+                            <div class="param-box">
+                                <strong>خروجی:</strong> (کلمه پاک‌شده, لیست کاراکترهای حذف‌شده)
+                            </div>
+                            <p>تغییر روی متن: حذف کاراکترهای غیر ضروری.</p>
+                        </div>
+                        
+                        <div class="function-box">
+                            <div class="function-title">get_removed_chars(word)</div>
+                            <p>فقط لیست کاراکترهایی که حذف شده‌اند را برمی‌گرداند. متن اصلی تغییر نمی‌کند.</p>
+                        </div>
+                        
+                        <div class="function-box">
+                            <div class="function-title">is_diacritic(char)</div>
+                            <p>بررسی اینکه آیا کاراکتر یک دیاتریک (علامت نشانه‌گذاری صداها در فارسی/عربی) است یا نه.</p>
+                            <div class="param-box">
+                                <strong>ورودی:</strong> char → یک کاراکتر (مثلاً 'َ' یا 'ُ')
+                                <br>
+                                <strong>خروجی:</strong> True اگر کاراکتر دیاتریک باشد، False اگر کاراکتر معمولی یا غیر دیاتریک باشد.
+                            </div>
+                        </div>
+                        
+                        <div class="function-box">
+                            <div class="function-title">is_phonetically_silent_vav(word, pos)</div>
+                            <p>بررسی اینکه آیا حرف «و» در موقعیت مشخص بی‌صدا است یا نه. متن اصلی تغییر نمی‌کند. (مانند کلمه 'خواهر')</p>
+                        </div>
+                        
+                        <div class="function-box">
+                            <div class="function-title">convert_to_phonetic(text)</div>
+                            <p>تبدیل متن فارسی/عربی به نمایش فونتیک (مثلاً «و» → v یا u) (نگاشت فونتیک)</p>
+                            <p>متن اصلی → متن فونتیک.</p>
+                        </div>
+                        
+                        <div class="function-box">
+                            <div class="function-title">validate_text_length(view_func)</div>
+                            <p>دکوراتور برای بررسی طول متن و تعداد کلمات. اگر طول یا تعداد کلمات بیش از حد باشد، خطا می‌دهد و اجرای تابع بعدی متوقف می‌شود.</p>
+                        </div>
+                    </div>
+
+                    <!-- بخش هم‌ترازی و هایلایت -->
+                    <div class="tab-pane fade" id="highlighting" role="tabpanel">
+                        <h2 class="section-title">ماژول هم‌ترازی و هایلایت (highlighting.py)</h2>
+                        
+                        <div class="function-box">
+                            <div class="function-title">highlight_differences(word1, word2, phonetic_mode=False)</div>
+                            <p>این تابع دو کلمه را کاراکتر به کاراکتر مقایسه می‌کند و تغییرات را به شکل هایلایت رنگی و عملیات قابل فهم ثبت می‌کند.</p>
+                            
+                            <div class="param-box">
+                                <strong>ورودی‌ها:</strong>
+                                <ul>
+                                    <li>word1 → کلمه اول</li>
+                                    <li>word2 → کلمه دوم</li>
+                                    <li>phonetic_mode → اگر True باشد، مقایسه بر اساس فونتیک انجام می‌شود، نه حروف دقیق</li>
+                                </ul>
+                            </div>
+                            
+                            <div class="param-box">
+                                <strong>خروجی‌ها:</strong>
+                                <ol>
+                                    <li>highlighted1 → کلمه اول با &lt;span style="color:..."&gt; برای نمایش تغییرات</li>
+                                    <li>highlighted2 → کلمه دوم با رنگ برای تغییرات</li>
+                                    <li>operations → لیست توضیحاتی مثل:
+                                        <ul>
+                                            <li>Match: 'ا'</li>
+                                            <li>Insert: 'و'</li>
+                                            <li>Delete: 'ر'</li>
+                                            <li>Substitute: 'ب' with 'پ' (Cost: 0.5)</li>
+                                        </ul>
+                                    </li>
+                                </ol>
+                            </div>
+                            
+                            <div class="step-box">
+                                <strong>مراحل عملکرد:</strong>
+                                <ol>
+                                    <li>ابتدا اگر یکی از کلمات خالی باشد، عملیات Insert/Delete انجام می‌شود.</li>
+                                    <li>کلمات با clean_word پاک‌سازی می‌شوند (حذف کاراکترهای بی‌اهمیت).</li>
+                                    <li>اگر حالت فونتیک فعال باشد، هر کلمه با convert_to_phonetic تبدیل به فرم فونتیکی می‌شود.</li>
+                                    <li>الگوریتم Levenshtein با مسیر (path) اجرا می‌شود تا کمترین تغییرات بین دو کلمه پیدا شود.</li>
+                                    <li>مسیر حاصل (match, substitute, insert, delete) تفسیر و رنگ‌دهی می‌شود:
+                                        <ul>
+                                            <li><strong>match:</strong> بدون تغییر</li>
+                                            <li><strong>substitute:</strong> رنگ متفاوت بسته به هزینه و نوع جایگزینی</li>
+                                            <li><strong>delete:</strong> قرمز</li>
+                                            <li><strong>insert:</strong> سبز</li>
+                                        </ul>
+                                    </li>
+                                </ol>
+                            </div>
+                        </div>
+                        
+                        <div class="function-box">
+                            <div class="function-title">highlight_aligned_words(aligned_words1, aligned_words2, aligned_pairs, phonetic_mode=False)</div>
+                            <p>این تابع برای لیست کلمات هم‌تراز شده در یک جمله یا متن عملیات مشابه highlight_differences را انجام می‌دهد، ولی به جای یک کلمه، روی کل لیست اعمال می‌شود.</p>
+                            
+                            <div class="param-box">
+                                <strong>ورودی‌ها:</strong>
+                                <ul>
+                                    <li>aligned_words1 → کلمات متن اول (ممکن است _ برای جای خالی باشد)</li>
+                                    <li>aligned_words2 → کلمات متن دوم</li>
+                                    <li>aligned_pairs → لیست جفت شاخص‌ها (i, j) که کلمات متناظر را مشخص می‌کند</li>
+                                    <li>phonetic_mode → فعال‌سازی مقایسه فونتیکی</li>
+                                </ul>
+                            </div>
+                            
+                            <div class="param-box">
+                                <strong>خروجی‌ها:</strong>
+                                <ol>
+                                    <li>highlighted_words1 → لیست کلمات اول با رنگ‌بندی</li>
+                                    <li>highlighted_words2 → لیست کلمات دوم با رنگ‌بندی</li>
+                                    <li>operations_texts → لیست کلی عملیات تمام کلمات</li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- بخش تولید گزارش -->
+                    <div class="tab-pane fade" id="reportgen" role="tabpanel">
+                        <h2 class="section-title">ماژول تولید گزارش (report.py)</h2>
+                        
+                        <div class="function-box">
+                            <div class="function-title">generate_comparison_report(text1, text2, highlighted_text1, highlighted_text2, operations, total_cost, mode)</div>
+                            <p>ایجاد یک دیکشنری کامل گزارش مقایسه متون.</p>
+                            <p>شامل متن‌ها، هایلایت‌ها، عملیات، هزینه کل، حالت مقایسه و زمان تولید.</p>
+                            
+                            <div class="param-box">
+                                <strong>ورودی‌ها:</strong>
+                                <ul>
+                                    <li>text1, text2 – متن‌های اصلی</li>
+                                    <li>highlighted_text1, highlighted_text2 – متن‌های هایلایت شده</li>
+                                    <li>operations – لیست عملیات تغییر</li>
+                                    <li>total_cost – مجموع هزینه تغییر</li>
+                                    <li>mode – حالت مقایسه</li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <div class="function-box">
+                            <div class="function-title">save_report_to_markdown(report, filename="comparison_report.md")</div>
+                            <p>تولید یک فایل Markdown از گزارش، شامل: متن‌ها، هایلایت‌ها، جدول آمار عملیات، نمودار میله‌ای و جزئیات عملیات.</p>
+                            <p>فایل را در پوشه reports ذخیره می‌کند.</p>
+                        </div>
+                        
+                        <div class="function-box">
+                            <div class="function-title">download_report(report) (نسخه وب برای Django)</div>
+                            <p>تولید فایل Markdown و بازگرداندن آن به صورت قابل دانلود برای کاربران وب.</p>
+                        </div>
+                    </div>
+
+                    <!-- بخش روند اجرا -->
+                    <div class="tab-pane fade" id="process" role="tabpanel">
+                        <h2 class="section-title">روند اجرای کلی هنگام مقایسه دو متن</h2>
+                        
+                        <div class="step-box">
+                            <strong>۱. validate_text_length</strong>
+                            <p>بررسی طول متن و تعداد کلمات. اجرای بقیه توابع متوقف می‌شود اگر متن طولانی باشد.</p>
+                        </div>
+                        
+                        <div class="step-box">
+                            <strong>۲. پیش‌پردازش هر کلمه:</strong>
+                            <ul>
+                                <li>clean_word → حذف کاراکترهای غیرضروری</li>
+                                <li>convert_to_phonetic → تبدیل به فونتیک (در صورت فعال بودن حالت phonetic)</li>
+                                <li>is_phonetically_silent_vav → تحلیل حرف «و» بی‌صدا</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="step-box">
+                            <strong>۳. هم‌ترازی و تولید عملیات:</strong>
+                            <ul>
+                                <li>levenshtein_with_path → مسیر کمترین هزینه تغییرات</li>
+                                <li>highlight_differences → تولید رنگ‌ها و عملیات برای هر کلمه</li>
+                                <li>highlight_aligned_words → جمع‌آوری نتایج برای کل جمله</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="step-box">
+                            <strong>۴. محاسبه هزینه کل تغییرات</strong>
+                            <p>جمع کردن هزینه‌های insert, delete, substitute</p>
+                        </div>
+                        
+                        <div class="step-box">
+                            <strong>۵. تولید گزارش نهایی:</strong>
+                            <ul>
+                                <li>generate_comparison_report → دیکشنری شامل متن، هایلایت، عملیات و هزینه کل</li>
+                                <li>print_report → نمایش در کنسول</li>
+                            </ul>
+                        </div>
+                        
+                        <h4 class="mt-4">خلاصه تغییرات روی متن</h4>
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>مرحله</th>
+                                        <th>تغییر روی متن</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>clean_word</td>
+                                        <td>حذف کاراکترهای غیر ضروری</td>
+                                    </tr>
+                                    <tr>
+                                        <td>convert_to_phonetic</td>
+                                        <td>جایگزینی حروف با معادل فونتیک</td>
+                                    </tr>
+                                    <tr>
+                                        <td>highlight_differences</td>
+                                        <td>تولید متن هایلایت شده با &lt;span&gt; (متن اصلی تغییر نمی‌کند)</td>
+                                    </tr>
+                                    <tr>
+                                        <td>generate_comparison_report</td>
+                                        <td>تولید دیکشنری گزارش</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <div class="mt-4">
+                            <h4>فایل‌های اصلی پروژه</h4>
+                            <p>فایل‌های اصلی مورد نیاز برای اجرا پروژه که کدنویسی شده‌اند در پوشه alghorithms:</p>
+                            <div class="bg-dark text-light p-3 rounded">
+                                highlighting.py<br>
+                                preprocessing.py<br>
+                                report.py
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- بخش گزارش نمونه -->
+            <div class="tab-pane fade" id="report" role="tabpanel">
+                <h2 class="section-title">گزارش نمونه مقایسه متون</h2>
+                
+                <!-- خلاصه گزارش -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <span><i class="bi bi-clipboard-data"></i> خلاصه گزارش</span>
+                        <span class="badge bg-primary">حالت: عادی</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3 col-6 mb-3">
+                                <div class="text-center">
+                                    <div class="fw-bold fs-4 text-primary">۱۲</div>
+                                    <div>تعداد کلمات متن اول</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-6 mb-3">
+                                <div class="text-center">
+                                    <div class="fw-bold fs-4 text-primary">۱۴</div>
+                                    <div>تعداد کلمات متن دوم</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-6 mb-3">
+                                <div class="text-center">
+                                    <div class="fw-bold fs-4 text-success">۸</div>
+                                    <div>تطابق کامل</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-6 mb-3">
+                                <div class="text-center">
+                                    <div class="fw-bold fs-4 text-danger">۴.۵</div>
+                                    <div>هزینه کل تغییرات</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-center mt-3">
+                            <i class="bi bi-clock"></i> تولید گزارش در: ۲۵ مرداد ۱۴۰۳ - ۱۵:۴۲
+                        </div>
+                    </div>
+                </div>
+
+                <!-- متون مقایسه شده -->
+                <div class="row">
+                    <div class="col-lg-6">
+                        <div class="card">
+                            <div class="card-header"><i class="bi bi-text-left"></i> متن اول</div>
+                            <div class="card-body">
+                                <div class="p-3 bg-light rounded">
+                                    این یک <span class="highlight-red">متن</span> <span class="highlight-blue">نمونه</span> است برای <span class="highlight-purple">تست</span> عملکرد سیستم مقایسه متون.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-6">
+                        <div class="card">
+                            <div class="card-header"><i class="bi bi-text-right"></i> متن دوم</div>
+                            <div class="card-body">
+                                <div class="p-3 bg-light rounded">
+                                    این <span class="highlight-green">هم</span> یک <span class="highlight-blue">نمونه</span> متن است برای <span class="highlight-orange">آزمایش</span> عملکرد سیستم مقایسه.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- راهنمای رنگ‌ها -->
+                <div class="card">
+                    <div class="card-header"><i class="bi bi-palette"></i> راهنمای رنگ‌ها</div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3 col-6 mb-2">
+                                <span class="d-inline-block me-2" style="width:20px; height:20px; background-color: #ffcccc;"></span>
+                                <span>حذف شده</span>
+                            </div>
+                            <div class="col-md-3 col-6 mb-2">
+                                <span class="d-inline-block me-2" style="width:20px; height:20px; background-color: #ccffcc;"></span>
+                                <span>اضافه شده</span>
+                            </div>
+                            <div class="col-md-3 col-6 mb-2">
+                                <span class="d-inline-block me-2" style="width:20px; height:20px; background-color: #cce5ff;"></span>
+                                <span>تطابق با تفاوت جزئی</span>
+                            </div>
+                            <div class="col-md-3 col-6 mb-2">
+                                <span class="d-inline-block me-2" style="width:20px; height:20px; background-color: #ffe5cc;"></span>
+                                <span>تغییر غیرساده</span>
+                            </div>
+                            <div class="col-md-3 col-6 mb-2">
+                                <span class="d-inline-block me-2" style="width:20px; height:20px; background-color: #e5ccff;"></span>
+                                <span>تغییر ساده</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- عملیات انجام شده -->
+                <div class="card">
+                    <div class="card-header"><i class="bi bi-list-check"></i> عملیات انجام شده</div>
+                    <div class="card-body">
+                        <div class="operation-item operation-match">
+                            <i class="bi bi-check-circle-fill text-success"></i> تطابق: 'این'
+                        </div>
+                        <div class="operation-item operation-insert">
+                            <i class="bi bi-plus-circle-fill text-success"></i> درج: 'هم'
+                        </div>
+                        <div class="operation-item operation-match">
+                            <i class="bi bi-check-circle-fill text-success"></i> تطابق: 'یک'
+                        </div>
+                        <div class="operation-item operation-delete">
+                            <i class="bi bi-dash-circle-fill text-danger"></i> حذف: 'متن'
+                        </div>
+                        <div class="operation-item operation-match">
+                            <i class="bi bi-check-circle-fill text-success"></i> تطابق: 'نمونه'
+                        </div>
+                        <div class="operation-item operation-substitute">
+                            <i class="bi bi-arrow-left-right text-warning"></i> جایگزینی: 'تست' با 'آزمایش' (هزینه: ۰.۵)
+                        </div>
+                        <div class="operation-item operation-match">
+                            <i class="bi bi-check-circle-fill text-success"></i> تطابق: 'عملکرد سیستم مقایسه'
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- فوتر -->
+    <div class="bg-dark text-light text-center py-4 mt-4">
+        <div class="container">
+            <p>پروژه مقایسه کننده متون - درس ساختمان داده</p>
+            <p>توسعه داده شده با <i class="bi bi-heart-fill text-danger"></i> توسط تیم نرم‌افزاری</p>
+            <div class="mt-3">
+                <button class="btn btn-outline-light me-2"><i class="bi bi-download"></i> دریافت گزارش PDF</button>
+                <button class="btn btn-outline-light"><i class="bi bi-code-slash"></i> خروجی Markdown</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
