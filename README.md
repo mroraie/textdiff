@@ -10,9 +10,7 @@ This is a Django-based web application for advanced **text comparison and simila
 - 💡 **Highlighted Differences** in words and sounds
 - 🧠 **Custom Algorithm Modes**: `standard`, `phonetic`
 - 🌐 **Web UI** for input and comparison
-- ⚙️ **RESTful API** for programmatic access
-- 📉 **Similarity Score Calculation** (percentage)
-- 📁 Support for Persian language
+- Support for Persian language
 
 ## 🚀 Technologies Used
 
