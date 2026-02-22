@@ -1,4 +1,5 @@
 import logging
+from typing import Tuple, List
 from comparator.algorithms.constants import SET_A, ALEF_VARIANTS, PHONETIC_MAPPING, VOWELS, DIACRITICS
 from comparator.algorithms.logs_setting import get_logger
 from django.contrib import messages
@@ -24,7 +25,7 @@ def log_function_call(func):
 
 
 @log_function_call
-def clean_word(word: str) -> tuple[str, list[str]]:
+def clean_word(word: str) -> Tuple[str, List[str]]:
     logger.info(f"Cleaning word: '{word}'")
     
     removed_chars = []

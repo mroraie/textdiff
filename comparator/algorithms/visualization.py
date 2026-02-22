@@ -4,8 +4,10 @@ import os
 from typing import Dict, List, Optional, Tuple
 import numpy as np
 
-graphviz_path = r"C:\Program Files\Graphviz\bin"
-os.environ["PATH"] += os.pathsep + graphviz_path
+# Graphviz path - can be set via environment variable
+graphviz_path = os.environ.get('GRAPHVIZ_PATH', r"C:\Program Files\Graphviz\bin")
+if os.path.exists(graphviz_path):
+    os.environ["PATH"] += os.pathsep + graphviz_path
 
 try:
     from graphviz import Digraph
@@ -32,21 +34,21 @@ def visualize_word_operations(
     word2: str,
     operations: list,
     filename: str,
-    format: str = "png",
+    output_format: str = "png",
     enhanced: bool = True,
 ):
     try:
         logger.info(f"Visualizing word transformation: '{word1}' → '{word2}'")
         logger.debug(f"Operations: {operations}")
-        logger.debug(f"Output format: {format}, Enhanced: {enhanced}")
+        logger.debug(f"Output format: {output_format}, Enhanced: {enhanced}")
 
-        if format == "json":
+        if output_format == "json":
             return _create_word_json_visualization(word1, word2, operations, filename)
 
         if enhanced:
-            return _create_enhanced_word_visualization(word1, word2, operations, filename, format)
+            return _create_enhanced_word_visualization(word1, word2, operations, filename, output_format)
         else:
-            return _create_basic_word_visualization(word1, word2, operations, filename, format)
+            return _create_basic_word_visualization(word1, word2, operations, filename, output_format)
 
     except Exception as e:
         logger.error(f"Error in visualize_word_operations: {str(e)}", exc_info=True)

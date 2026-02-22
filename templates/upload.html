@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>آپلود و مقایسه فایل‌های متنی</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #10b981;
+            --secondary-dark: #059669;
+            --light: #f9fafb;
+            --dark: #1f2937;
+            --gray: #6b7280;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --background: #f3f4f6;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Vazirmatn', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: var(--background);
+            color: var(--dark);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .app-container {
+            width: 100%;
+            max-width: 1200px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        
+        .app-header {
+            background: linear-gradient(145deg, var(--primary-dark), var(--primary));
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .app-title {
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+        
+        .app-subtitle {
+            font-size: 1rem;
+            opacity: 0.9;
+            margin-bottom: 10px;
+        }
+        
+        .app-body {
+            padding: 30px;
+        }
+        
+        .upload-form {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .file-input-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .file-input-group label {
+            font-weight: 600;
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .file-upload-area {
+            border: 3px dashed #e5e7eb;
+            border-radius: 10px;
+            padding: 40px 20px;
+            text-align: center;
+            background: var(--light);
+            transition: all 0.3s;
+            cursor: pointer;
+            position: relative;
+        }
+        
+        .file-upload-area:hover {
+            border-color: var(--primary);
+            background: #f0f0ff;
+        }
+        
+        .file-upload-area.dragover {
+            border-color: var(--primary);
+            background: #e0e0ff;
+        }
+        
+        .file-upload-area input[type="file"] {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+        
+        .file-upload-icon {
+            font-size: 3rem;
+            color: var(--primary);
+            margin-bottom: 15px;
+        }
+        
+        .file-upload-text {
+            font-size: 1.1rem;
+            color: var(--dark);
+            margin-bottom: 10px;
+        }
+        
+        .file-upload-hint {
+            font-size: 0.9rem;
+            color: var(--gray);
+        }
+        
+        .file-info {
+            margin-top: 15px;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+            display: none;
+        }
+        
+        .file-info.show {
+            display: block;
+        }
+        
+        .file-info-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+        }
+        
+        .file-info-item:last-child {
+            margin-bottom: 0;
+        }
+        
+        .file-info-label {
+            font-weight: 600;
+            color: var(--gray);
+        }
+        
+        .file-info-value {
+            color: var(--dark);
+        }
+        
+        .form-actions {
+            grid-column: span 2;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 15px 30px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            font-size: 1.1rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(145deg, var(--primary), var(--primary-dark));
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(99, 102, 241, 0.3);
+        }
+        
+        .btn-secondary {
+            background: white;
+            color: var(--primary);
+            border: 2px solid var(--primary);
+        }
+        
+        .btn-secondary:hover {
+            background: var(--light);
+            transform: translateY(-2px);
+        }
+        
+        .supported-formats {
+            margin-top: 30px;
+            padding: 20px;
+            background: var(--light);
+            border-radius: 10px;
+        }
+        
+        .supported-formats h3 {
+            margin-bottom: 15px;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .format-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .format-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 15px;
+            background: white;
+            border-radius: 20px;
+            border: 1px solid #e5e7eb;
+            font-size: 0.9rem;
+        }
+        
+        .format-badge i {
+            color: var(--primary);
+        }
+        
+        .messages {
+            margin-bottom: 20px;
+        }
+        
+        .alert {
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .alert-error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+        
+        .alert-success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+        
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 20px;
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        
+        .back-link:hover {
+            color: var(--primary-dark);
+            transform: translateX(-5px);
+        }
+        
+        @media (max-width: 900px) {
+            .upload-form {
+                grid-template-columns: 1fr;
+            }
+            
+            .form-actions {
+                grid-column: span 1;
+                flex-direction: column;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css">
+</head>
+<body>
+    <div class="app-container">
+        <div class="app-header">
+            <h1 class="app-title">
+                <i class="fas fa-file-upload"></i>
+                آپلود و مقایسه فایل‌های متنی
+            </h1>
+            <p class="app-subtitle">فایل‌های متنی خود را آپلود کنید و آن‌ها را مقایسه کنید</p>
+        </div>
+        
+        <div class="app-body">
+            <a href="{% url 'index' %}" class="back-link">
+                <i class="fas fa-arrow-right"></i>
+                بازگشت به صفحه اصلی
+            </a>
+            
+            {% if messages %}
+            <div class="messages">
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">
+                    <i class="fas fa-{% if message.tags == 'error' %}exclamation-circle{% else %}check-circle{% endif %}"></i>
+                    {{ message }}
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            
+            <form method="POST" action="{% url 'upload_and_compare' %}" enctype="multipart/form-data" class="upload-form">
+                {% csrf_token %}
+                
+                <div class="file-input-group">
+                    <label for="file1">
+                        <i class="fas fa-file-alt"></i>
+                        فایل اول:
+                    </label>
+                    <div class="file-upload-area" id="uploadArea1">
+                        <input type="file" id="file1" name="file1" accept=".txt,.docx,.pdf" required>
+                        <div class="file-upload-icon">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                        </div>
+                        <div class="file-upload-text">برای آپلود کلیک کنید یا فایل را بکشید</div>
+                        <div class="file-upload-hint">فرمت‌های مجاز: TXT, DOCX, PDF</div>
+                        <div class="file-info" id="fileInfo1">
+                            <div class="file-info-item">
+                                <span class="file-info-label">نام فایل:</span>
+                                <span class="file-info-value" id="fileName1">-</span>
+                            </div>
+                            <div class="file-info-item">
+                                <span class="file-info-label">حجم:</span>
+                                <span class="file-info-value" id="fileSize1">-</span>
+                            </div>
+                            <div class="file-info-item">
+                                <span class="file-info-label">نوع:</span>
+                                <span class="file-info-value" id="fileType1">-</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="file-input-group">
+                    <label for="file2">
+                        <i class="fas fa-file-alt"></i>
+                        فایل دوم:
+                    </label>
+                    <div class="file-upload-area" id="uploadArea2">
+                        <input type="file" id="file2" name="file2" accept=".txt,.docx,.pdf" required>
+                        <div class="file-upload-icon">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                        </div>
+                        <div class="file-upload-text">برای آپلود کلیک کنید یا فایل را بکشید</div>
+                        <div class="file-upload-hint">فرمت‌های مجاز: TXT, DOCX, PDF</div>
+                        <div class="file-info" id="fileInfo2">
+                            <div class="file-info-item">
+                                <span class="file-info-label">نام فایل:</span>
+                                <span class="file-info-value" id="fileName2">-</span>
+                            </div>
+                            <div class="file-info-item">
+                                <span class="file-info-label">حجم:</span>
+                                <span class="file-info-value" id="fileSize2">-</span>
+                            </div>
+                            <div class="file-info-item">
+                                <span class="file-info-label">نوع:</span>
+                                <span class="file-info-value" id="fileType2">-</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-code-compare"></i>
+                        مقایسه فایل‌ها
+                    </button>
+                    <a href="{% url 'index' %}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i>
+                        انصراف
+                    </a>
+                </div>
+            </form>
+            
+            <div class="supported-formats">
+                <h3>
+                    <i class="fas fa-info-circle"></i>
+                    فرمت‌های پشتیبانی شده
+                </h3>
+                <div class="format-list">
+                    <div class="format-badge">
+                        <i class="fas fa-file-alt"></i>
+                        <span>فایل‌های متنی (TXT)</span>
+                    </div>
+                    <div class="format-badge">
+                        <i class="fas fa-file-word"></i>
+                        <span>سند Word (DOCX)</span>
+                    </div>
+                    <div class="format-badge">
+                        <i class="fas fa-file-pdf"></i>
+                        <span>سند PDF</span>
+                    </div>
+                </div>
+                <p style="margin-top: 15px; color: var(--gray); font-size: 0.9rem;">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    حداکثر حجم هر فایل: 10 مگابایت
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Handle file input changes
+        function setupFileInput(inputId, areaId, infoId, nameId, sizeId, typeId) {
+            const input = document.getElementById(inputId);
+            const area = document.getElementById(areaId);
+            const info = document.getElementById(infoId);
+            const nameEl = document.getElementById(nameId);
+            const sizeEl = document.getElementById(sizeId);
+            const typeEl = document.getElementById(typeId);
+            
+            input.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    // Update file info
+                    nameEl.textContent = file.name;
+                    sizeEl.textContent = formatFileSize(file.size);
+                    typeEl.textContent = getFileType(file.name);
+                    
+                    // Show file info
+                    info.classList.add('show');
+                    
+                    // Update upload area text
+                    const textEl = area.querySelector('.file-upload-text');
+                    textEl.textContent = file.name;
+                }
+            });
+            
+            // Drag and drop handlers
+            area.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                area.classList.add('dragover');
+            });
+            
+            area.addEventListener('dragleave', function(e) {
+                e.preventDefault();
+                area.classList.remove('dragover');
+            });
+            
+            area.addEventListener('drop', function(e) {
+                e.preventDefault();
+                area.classList.remove('dragover');
+                
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    input.files = files;
+                    input.dispatchEvent(new Event('change'));
+                }
+            });
+        }
+        
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+        }
+        
+        function getFileType(fileName) {
+            const ext = fileName.split('.').pop().toLowerCase();
+            const types = {
+                'txt': 'متن ساده',
+                'docx': 'سند Word',
+                'pdf': 'سند PDF'
+            };
+            return types[ext] || ext.toUpperCase();
+        }
+        
+        // Setup both file inputs
+        document.addEventListener('DOMContentLoaded', function() {
+            setupFileInput('file1', 'uploadArea1', 'fileInfo1', 'fileName1', 'fileSize1', 'fileType1');
+            setupFileInput('file2', 'uploadArea2', 'fileInfo2', 'fileName2', 'fileSize2', 'fileType2');
+        });
+    </script>
+</body>
+</html>
+

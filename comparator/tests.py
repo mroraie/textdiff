@@ -203,7 +203,6 @@ class TextComparatorTests(TestCase):
         
         self.assertIn("standard", results)
         self.assertIn("phonetic", results)
-        self.assertIn("phonetic1", results)
         self.assertIn("persian", results)
         
         for mode, result in results.items():

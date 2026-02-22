@@ -161,6 +161,11 @@ settings_local.py
 reports/*.md
 !reports/README.md
 
+# New Persian documentation files (ignore)
+بررسی_مشکلات_پروژه.md
+مشکلات_برنامه.md
+گزارش_رفع_مشکلات.md
+
 # OS specific
 Thumbs.db
 .DS_Store

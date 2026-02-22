@@ -19,12 +19,17 @@ from comparator.algorithms.report import (
     save_report_to_markdown,
 )
 from comparator.algorithms.constants import PHONETIC_MAPPING, DEFAULT_PHONETIC
+from comparator.utils import (
+    extract_text_from_file,
+    validate_file_size,
+    get_file_info,
+)
 from textdiff.settings import MAX_TEXT_LENGTH, MAX_WORDS
 
 logger = logging.getLogger(__name__)
 
 # لیست modeهای مجاز برای مقایسه متن
-ALLOWED_MODES = ['standard', 'phonetic', 'phonetic1', 'persian']
+ALLOWED_MODES = ['standard', 'phonetic', 'persian']
 
 
 def _calculate_similarity(cost: int, text1: str, text2: str) -> float:
@@ -140,9 +145,6 @@ def compare(request):
         # Phonetic comparison
         highlighted_ph1, highlighted_ph2, cost_ph, ops_ph = comparator.compare_texts(mode="phonetic")
         
-        # Phonetic1 comparison
-        highlighted_p1, highlighted_p2, cost_p1, ops_p1 = comparator.compare_texts(mode="phonetic1")
-        
         # Persian comparison
         highlighted_per1, highlighted_per2, cost_per, ops_per = comparator.compare_texts(mode="persian")
 
@@ -257,8 +259,8 @@ def compare(request):
         now_jalali = jdatetime.datetime.fromgregorian(datetime=now_gregorian)
         now_jalali_str = now_jalali.strftime("%Y-%m-%d %H:%M:%S")
 
-        # Calculate Levenshtein distance
-        distance, operations = compute_levenshtein_with_path(text1, text2)
+        # Calculate Levenshtein distance (convert strings to lists of characters)
+        distance, operations = compute_levenshtein_with_path(list(text1), list(text2))
 
         # Prepare context
         context = {
@@ -270,9 +272,6 @@ def compare(request):
             "phonetic_lis2": highlighted_ph2,
             "phonetic_operations_table": phonetic_operations_table,
             "phonetic_cost": cost_ph,
-
-            "phonetic1_cost": cost_p1,
-            "phonetic1_similarity": _calculate_similarity(cost_p1, text1, text2),
             "persian_lis1": highlighted_per1,
             "persian_lis2": highlighted_per2,
             "persian_cost": cost_per,
@@ -348,6 +347,7 @@ def api_compare(request):
             highlighted_text2=highlighted2,
             operations=operations,
             total_cost=total_cost,
+            mode="standard",
         )
 
         return JsonResponse(
@@ -412,7 +412,8 @@ def download_report_view(request):
         with open(filepath, "rb") as file:
             # FileResponse will handle closing the file when response is sent
             # We use iter() to ensure the file stays open until response is complete
-            return FileResponse(file, as_attachment=True, filename=filename)
+            response = FileResponse(iter(file), as_attachment=True, filename=filename)
+            return response
 
     except Exception as e:
         logger.error(
@@ -495,23 +496,218 @@ def api_graph_data(request):
         }, status=400)
     
     try:
-        # در حال حاضر فقط حالت standard پشتیبانی می‌شود
-        # می‌توان در آینده modeهای دیگر را اضافه کرد
+        # برای مقایسه متن کامل، باید از کلمات استفاده کنیم
+        # تابع _generate_word_graph_data برای کلمات طراحی شده، پس باید متن را به کلمات تقسیم کنیم
+        words1 = text1.split()
+        words2 = text2.split()
+        
+        # برای حالت‌های مختلف، پردازش مناسب انجام می‌شود
         if mode == 'phonetic':
-            # پردازش فونتیک (آوایی) - در صورت نیاز پیاده‌سازی شود
-            graph_data = _generate_word_graph_data(text1, text2)
+            # پردازش فونتیک (آوایی)
+            from comparator.algorithms.preprocessing import convert_to_phonetic
+            words1 = [convert_to_phonetic(w) for w in words1]
+            words2 = [convert_to_phonetic(w) for w in words2]
         elif mode == 'persian':
-            # پردازش ویژه فارسی - در صورت نیاز پیاده‌سازی شود
-            graph_data = _generate_word_graph_data(text1, text2)
-        else:
-            # حالت استاندارد
-            graph_data = _generate_word_graph_data(text1, text2)
+            # پردازش ویژه فارسی (تمیز کردن)
+            from comparator.algorithms.preprocessing import clean_word
+            words1 = [clean_word(w)[0] for w in words1]
+            words2 = [clean_word(w)[0] for w in words2]
+        
+        # تولید گراف برای مقایسه کلمه به کلمه
+        graph_data = _generate_text_graph_data(words1, words2, mode)
         
         return JsonResponse(graph_data)
         
     except Exception as e:
         logger.error(f"Error generating graph data: {str(e)}", exc_info=True)
         return JsonResponse({'error': str(e)}, status=500)
+
+
+def _generate_text_graph_data(words1, words2, mode='standard'):
+    """
+    Generate graph data for text comparison (word-level).
+    
+    Args:
+        words1: List of words from first text
+        words2: List of words from second text
+        mode: Comparison mode
+    
+    Returns:
+        Dictionary with nodes and edges for graph visualization
+    """
+    from comparator.algorithms.comparator import TextComparator
+    from comparator.algorithms.alignment import align_words
+    
+    # Align words
+    aligned1, aligned2, operations, total_cost = align_words(words1, words2)
+    
+    nodes = []
+    edges = []
+    
+    # Add source and target text nodes
+    text1_str = ' '.join(words1)
+    text2_str = ' '.join(words2)
+    
+    nodes.append({
+        'id': 'source_text',
+        'label': text1_str[:50] + ('...' if len(text1_str) > 50 else ''),
+        'type': 'source_text',
+        'color': '#69b3a2',
+        'size': 30
+    })
+    
+    nodes.append({
+        'id': 'target_text',
+        'label': text2_str[:50] + ('...' if len(text2_str) > 50 else ''),
+        'type': 'target_text',
+        'color': '#ff6b6b',
+        'size': 30
+    })
+    
+    # Add word nodes
+    word_idx1 = 0
+    word_idx2 = 0
+    
+    for i, (w1, w2) in enumerate(zip(aligned1, aligned2)):
+        if w1 != "_":
+            node_id = f"src_word_{word_idx1}"
+            nodes.append({
+                'id': node_id,
+                'label': w1[:20] + ('...' if len(w1) > 20 else ''),
+                'type': 'source_word',
+                'color': '#a1d99b',
+                'size': 18,
+                'position': word_idx1
+            })
+            edges.append({
+                'source': 'source_text',
+                'target': node_id,
+                'label': 'contains',
+                'color': '#69b3a2',
+                'width': 1,
+                'dashes': True
+            })
+            word_idx1 += 1
+        
+        if w2 != "_":
+            node_id = f"tgt_word_{word_idx2}"
+            nodes.append({
+                'id': node_id,
+                'label': w2[:20] + ('...' if len(w2) > 20 else ''),
+                'type': 'target_word',
+                'color': '#fdae6b',
+                'size': 18,
+                'position': word_idx2
+            })
+            edges.append({
+                'source': 'target_text',
+                'target': node_id,
+                'label': 'contains',
+                'color': '#ff6b6b',
+                'width': 1,
+                'dashes': True
+            })
+            word_idx2 += 1
+    
+    # Add operation edges
+    word_idx1 = 0
+    word_idx2 = 0
+    op_count = 0
+    
+    for i, (w1, w2) in enumerate(zip(aligned1, aligned2)):
+        if w1 != "_" and w2 != "_":
+            # Match or substitute
+            op_type = 'match' if w1 == w2 else 'substitute'
+            op_color = _get_operation_color(op_type)
+            
+            edges.append({
+                'source': f"src_word_{word_idx1}",
+                'target': f"tgt_word_{word_idx2}",
+                'label': op_type,
+                'color': op_color,
+                'width': 2
+            })
+            word_idx1 += 1
+            word_idx2 += 1
+        elif w1 != "_":
+            # Delete
+            edges.append({
+                'source': f"src_word_{word_idx1}",
+                'target': 'target_text',
+                'label': 'delete',
+                'color': _get_operation_color('delete'),
+                'width': 2,
+                'dashes': True
+            })
+            word_idx1 += 1
+        elif w2 != "_":
+            # Insert
+            edges.append({
+                'source': 'source_text',
+                'target': f"tgt_word_{word_idx2}",
+                'label': 'insert',
+                'color': _get_operation_color('insert'),
+                'width': 2,
+                'dashes': True
+            })
+            word_idx2 += 1
+    
+    # Add statistics node
+    stats = {'matches': 0, 'substitutes': 0, 'deletes': 0, 'inserts': 0}
+    for op in operations:
+        if isinstance(op, tuple) and len(op) > 0:
+            op_type = op[0]
+            if op_type == 'match':
+                stats['matches'] += 1
+            elif op_type == 'substitute':
+                stats['substitutes'] += 1
+            elif op_type == 'delete':
+                stats['deletes'] += 1
+            elif op_type == 'insert':
+                stats['inserts'] += 1
+    
+    stats_node = {
+        'id': 'stats',
+        'label': f"Statistics\nMode: {mode}\nTotal Cost: {total_cost}\n"
+                f"Matches: {stats['matches']}\nSubstitutes: {stats['substitutes']}\n"
+                f"Deletes: {stats['deletes']}\nInserts: {stats['inserts']}",
+        'type': 'statistics',
+        'color': '#9ecae1',
+        'size': 25
+    }
+    nodes.append(stats_node)
+    
+    edges.append({
+        'source': 'stats',
+        'target': 'source_text',
+        'label': 'analysis',
+        'color': '#9ecae1',
+        'width': 2,
+        'dashes': [5, 5]
+    })
+    
+    edges.append({
+        'source': 'stats',
+        'target': 'target_text',
+        'label': 'analysis',
+        'color': '#9ecae1',
+        'width': 2,
+        'dashes': [5, 5]
+    })
+    
+    return {
+        'nodes': nodes,
+        'edges': edges,
+        'metadata': {
+            'text1': text1_str,
+            'text2': text2_str,
+            'type': 'text_comparison',
+            'mode': mode,
+            'operations_count': len(operations),
+            'total_cost': total_cost,
+            'stats': stats
+        }
+    }
 
 
 def _generate_word_graph_data(word1, word2):
@@ -736,3 +932,80 @@ def info(request):
     Simple view to render the info.html template.
     """
     return render(request, 'info.html')
+
+
+@require_http_methods(["GET", "POST"])
+def upload_and_compare(request):
+    """
+    صفحه آپلود و مقایسه فایل‌های متنی.
+    
+    این view امکان آپلود دو فایل متنی (txt, docx, pdf) را فراهم می‌کند
+    و پس از استخراج متن از آن‌ها، آن‌ها را مقایسه می‌کند.
+    
+    Args:
+        request: Django HTTP request object
+        
+    Returns:
+        HttpResponse: صفحه upload.html برای GET یا redirect به compare برای POST
+    """
+    if request.method == "POST":
+        file1 = request.FILES.get('file1')
+        file2 = request.FILES.get('file2')
+        
+        # بررسی وجود فایل‌ها
+        if not file1 or not file2:
+            messages.error(request, "لطفاً هر دو فایل را انتخاب کنید.")
+            return render(request, "upload.html")
+        
+        # اعتبارسنجی اندازه فایل‌ها
+        max_size_mb = 10
+        valid1, error1 = validate_file_size(file1, max_size_mb)
+        valid2, error2 = validate_file_size(file2, max_size_mb)
+        
+        if not valid1:
+            messages.error(request, f"فایل اول: {error1}")
+            return render(request, "upload.html")
+        
+        if not valid2:
+            messages.error(request, f"فایل دوم: {error2}")
+            return render(request, "upload.html")
+        
+        # استخراج متن از فایل‌ها
+        text1, error1 = extract_text_from_file(file1)
+        text2, error2 = extract_text_from_file(file2)
+        
+        if error1:
+            messages.error(request, f"خطا در خواندن فایل اول: {error1}")
+            return render(request, "upload.html")
+        
+        if error2:
+            messages.error(request, f"خطا در خواندن فایل دوم: {error2}")
+            return render(request, "upload.html")
+        
+        # بررسی خالی نبودن متن‌ها
+        if not text1 or not text1.strip():
+            messages.error(request, "فایل اول خالی است یا متن قابل خواندن ندارد.")
+            return render(request, "upload.html")
+        
+        if not text2 or not text2.strip():
+            messages.error(request, "فایل دوم خالی است یا متن قابل خواندن ندارد.")
+            return render(request, "upload.html")
+        
+        # اعتبارسنجی طول متن
+        if len(text1) > MAX_TEXT_LENGTH or len(text2) > MAX_TEXT_LENGTH:
+            messages.error(request, f"متن استخراج شده از فایل‌ها باید کمتر از {MAX_TEXT_LENGTH} کاراکتر باشد.")
+            return render(request, "upload.html")
+        
+        # اعتبارسنجی تعداد کلمات
+        word_count1 = len(text1.split())
+        word_count2 = len(text2.split())
+        if word_count1 > MAX_WORDS or word_count2 > MAX_WORDS:
+            messages.error(request, f"متن استخراج شده از فایل‌ها باید کمتر از {MAX_WORDS} کلمه داشته باشد.")
+            return render(request, "upload.html")
+        
+        # هدایت به صفحه مقایسه با متن‌های استخراج شده
+        query_string = urlencode({"text1": text1, "text2": text2})
+        return redirect(reverse("compare") + f"?{query_string}")
+    
+    # GET request - نمایش فرم آپلود
+    return render(request, "upload.html")

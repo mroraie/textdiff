@@ -95,8 +95,16 @@ def highlight_aligned_words(aligned_words1: list[str], aligned_words2: list[str]
     operations_texts = []
 
     for i, j in aligned_pairs:
-        w1 = aligned_words1[i] if i is not None and aligned_words1[i] != "_" else ""
-        w2 = aligned_words2[j] if j is not None and aligned_words2[j] != "_" else ""
+        # بررسی صحیح برای None و اندیس‌های معتبر
+        if i is not None and i < len(aligned_words1) and aligned_words1[i] != "_":
+            w1 = aligned_words1[i]
+        else:
+            w1 = ""
+        
+        if j is not None and j < len(aligned_words2) and aligned_words2[j] != "_":
+            w2 = aligned_words2[j]
+        else:
+            w2 = ""
         
         h1, h2, ops = highlight_differences(w1, w2, phonetic_mode)
         highlighted_words1.append(''.join(h1))

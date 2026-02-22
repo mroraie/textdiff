@@ -8,7 +8,7 @@ This is a Django-based web application for advanced **text comparison and simila
 - 🔊 **Phonetic Comparison** (similar sounding words in Persian)
 - 📊 **Graph-Based Visualization** of edit operations
 - 💡 **Highlighted Differences** in words and sounds
-- 🧠 **Multiple Algorithm Modes**: `standard`, `phonetic`, `phonetic1`, `persian`
+- 🧠 **Multiple Algorithm Modes**: `standard`, `phonetic`, `persian`
 - 🌐 **Web UI** for input and comparison
 - 📄 **Markdown Report Generation** for comparison results
 - 🇮🇷 **Full Persian Language Support** with proper preprocessing
@@ -49,22 +49,34 @@ This is a Django-based web application for advanced **text comparison and simila
    pip install -r requirements.txt
    ```
 
-4. Run database migrations:
+4. Set up environment variables:
+   ```bash
+   # Copy the example environment file
+   cp env.example .env
+   
+   # Edit .env file and set your SECRET_KEY
+   # You can generate a secret key using:
+   python -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())'
+   ```
+   
+   **Important:** The `SECRET_KEY` is required for the application to run. Make sure to set it in your `.env` file.
+
+5. Run database migrations:
    ```bash
    python manage.py migrate
    ```
 
-5. Create a superuser (optional, for admin access):
+6. Create a superuser (optional, for admin access):
    ```bash
    python manage.py createsuperuser
    ```
 
-6. Start the development server:
+7. Start the development server:
    ```bash
    python manage.py runserver
    ```
 
-7. Open your browser and navigate to `http://127.0.0.1:8000/`
+8. Open your browser and navigate to `http://127.0.0.1:8000/`
 
 ## 📖 Usage
 
@@ -153,20 +165,26 @@ textdiff/
 
 ### Environment Variables
 
-You can configure the application using environment variables:
+You can configure the application using environment variables. Create a `.env` file in the project root (see `env.example` for a template):
 
-- `SECRET_KEY`: Django secret key (required in production)
+- `SECRET_KEY`: Django secret key (**required** - application will not start without it)
 - `DEBUG`: Enable/disable debug mode (default: True)
 - `ALLOWED_HOSTS`: Comma-separated list of allowed hosts
 - `MAX_TEXT_LENGTH`: Maximum text length (default: 10000)
 - `MAX_WORDS`: Maximum word count (default: 2000)
+- `GRAPHVIZ_PATH`: Path to Graphviz binaries (optional, mainly for Windows)
 
-Example:
+**Example `.env` file:**
 ```bash
-export SECRET_KEY='your-secret-key-here'
-export DEBUG='False'
-export ALLOWED_HOSTS='example.com,www.example.com'
+SECRET_KEY=your-secret-key-here
+DEBUG=True
+ALLOWED_HOSTS=localhost,127.0.0.1
+MAX_TEXT_LENGTH=10000
+MAX_WORDS=2000
+GRAPHVIZ_PATH=C:\Program Files\Graphviz\bin
 ```
+
+**Note:** The application uses `python-dotenv` to load environment variables from the `.env` file automatically.
 
 ## 🧪 Testing
 
@@ -182,7 +200,6 @@ python manage.py test
 
 - **standard**: Standard Levenshtein distance comparison
 - **phonetic**: Phonetic comparison (similar sounding words)
-- **phonetic1**: Alternative phonetic comparison
 - **persian**: Persian-specific text normalization and comparison
 
 ### Limitations

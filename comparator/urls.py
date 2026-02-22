@@ -9,5 +9,6 @@ urlpatterns = [
     path('download-report/', views.download_report_view, name='download_report'),
     path('graph/', views.graph_view, name='graph'),
     path('api/graph-data/', views.api_graph_data, name='api_graph_data'),
+    path('upload/', views.upload_and_compare, name='upload_and_compare'),
 ]
 

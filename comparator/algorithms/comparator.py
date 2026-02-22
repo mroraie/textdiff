@@ -1,6 +1,6 @@
 # comparator.py
 
-from comparator.algorithms.preprocessing import convert_to_phonetic, MAX_TEXT_LENGTH, MAX_WORDS
+from comparator.algorithms.preprocessing import convert_to_phonetic, clean_word, MAX_TEXT_LENGTH, MAX_WORDS
 from comparator.algorithms.alignment import align_words
 from comparator.algorithms.highlighting import highlight_aligned_words
 
@@ -57,7 +57,12 @@ class TextComparator:
         if mode == "phonetic":
             words1 = [convert_to_phonetic(w) for w in self.words1]
             words2 = [convert_to_phonetic(w) for w in self.words2]
+        elif mode == "persian":
+            # حالت persian: فقط تمیز کردن بدون تبدیل آوایی
+            words1 = [clean_word(w)[0] for w in self.words1]
+            words2 = [clean_word(w)[0] for w in self.words2]
         else:
+            # حالت standard: بدون تغییر
             words1 = self.words1
             words2 = self.words2
 
@@ -65,14 +70,26 @@ class TextComparator:
         aligned1, aligned2, operations, total_cost = align_words(words1, words2)
 
         # ایجاد aligned_pairs برای فراخوانی صحیح highlight
+        # باید از اندیس‌های واقعی در لیست‌های اصلی استفاده کنیم
         aligned_pairs = []
-        for i, (w1, w2) in enumerate(zip(aligned1, aligned2)):
+        idx1 = 0  # اندیس در لیست اصلی words1
+        idx2 = 0  # اندیس در لیست اصلی words2
+        
+        for w1, w2 in zip(aligned1, aligned2):
             if w1 != "_" and w2 != "_":
-                aligned_pairs.append((i, i))
+                # هر دو کلمه وجود دارند - match یا substitute
+                aligned_pairs.append((idx1, idx2))
+                idx1 += 1
+                idx2 += 1
             elif w1 != "_":
-                aligned_pairs.append((i, None))
+                # فقط w1 وجود دارد - delete
+                aligned_pairs.append((idx1, None))
+                idx1 += 1
             elif w2 != "_":
-                aligned_pairs.append((None, i))
+                # فقط w2 وجود دارد - insert
+                aligned_pairs.append((None, idx2))
+                idx2 += 1
+            # اگر هر دو "_" باشند، هیچ کاری نمی‌کنیم
 
         # Highlight words
         highlighted1, highlighted2, _ = highlight_aligned_words(
@@ -85,7 +102,7 @@ class TextComparator:
         """Compare texts in all available modes"""
         results = {}
         
-        modes = ["standard", "phonetic", "phonetic1", "persian"]
+        modes = ["standard", "phonetic", "persian"]
         for mode in modes:
             highlighted1, highlighted2, total_cost, operations = self.compare_texts(mode=mode)
             results[mode] = {
