@@ -1,14 +1,15 @@
 # Django Framework
-Django>=5.2.0,<6.0.0
+Django>=4.2.0,<6.0.0
+
+# Environment variables management
+python-dotenv>=1.0.0
 
 # Persian Date/Time Support
 jdatetime>=4.0.0
 
-# Numerical Computing (for visualization)
-numpy>=1.24.0
-
-# Graph Visualization (optional - used in archive and visualization modules)
-networkx>=3.0
-matplotlib>=3.7.0
-graphviz>=0.20.0
+# Optional dependencies for visualization (uncomment if needed)
+# numpy>=1.24.0
+# networkx>=3.0
+# matplotlib>=3.7.0
+# graphviz>=0.20.0
 
