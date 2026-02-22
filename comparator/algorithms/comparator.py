@@ -1,6 +1,7 @@
 # comparator.py
 
-from comparator.algorithms.preprocessing import convert_to_phonetic, clean_word, MAX_TEXT_LENGTH, MAX_WORDS
+from comparator.algorithms.preprocessing import convert_to_phonetic, clean_word
+from textdiff.settings import MAX_TEXT_LENGTH, MAX_WORDS
 from comparator.algorithms.alignment import align_words
 from comparator.algorithms.highlighting import highlight_aligned_words
 

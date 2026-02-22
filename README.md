@@ -2,18 +2,18 @@
 
 This is a Django-based web application for advanced **text comparison and similarity analysis**, developed as a final project for a Data Structures course. The application supports Persian language text comparison using various algorithms including Levenshtein distance.
 
-## 🔍 Features
+## Features
 
-- 🔠 **Standard Text Comparison** (using edit distance/Levenshtein algorithm)
-- 🔊 **Phonetic Comparison** (similar sounding words in Persian)
-- 📊 **Graph-Based Visualization** of edit operations
-- 💡 **Highlighted Differences** in words and sounds
-- 🧠 **Multiple Algorithm Modes**: `standard`, `phonetic`, `persian`
-- 🌐 **Web UI** for input and comparison
-- 📄 **Markdown Report Generation** for comparison results
-- 🇮🇷 **Full Persian Language Support** with proper preprocessing
+- **Standard Text Comparison** (using edit distance/Levenshtein algorithm)
+- **Phonetic Comparison** (similar sounding words in Persian)
+- **Graph-Based Visualization** of edit operations
+- **Highlighted Differences** in words and sounds
+- **Multiple Algorithm Modes**: `standard`, `phonetic`, `persian`
+- **Web UI** for input and comparison
+- **Markdown Report Generation** for comparison results
+- **Full Persian Language Support** with proper preprocessing
 
-## 🚀 Technologies Used
+## Technologies Used
 
 - **Django 4.2+** (Backend Framework)
 - **Python 3.8+** (Core logic and algorithms)
@@ -22,7 +22,7 @@ This is a Django-based web application for advanced **text comparison and simila
 - **JavaScript** (for UI enhancement and graph visualization)
 - **D3.js** (for interactive graph visualization)
 
-## 📦 Installation
+## Installation
 
 1. Clone the repository (replace with your repository URL):
    ```bash
@@ -78,7 +78,7 @@ This is a Django-based web application for advanced **text comparison and simila
 
 8. Open your browser and navigate to `http://127.0.0.1:8000/`
 
-## 📖 Usage
+## Usage
 
 ### Web Interface
 
@@ -135,7 +135,7 @@ GET /api/graph-data/?text1=سلام&text2=سلام&mode=standard
 }
 ```
 
-## 🏗️ Project Structure
+## Project Structure
 
 ```
 textdiff/
@@ -161,7 +161,7 @@ textdiff/
 └── manage.py            # Django management script
 ```
 
-## ⚙️ Configuration
+## Configuration
 
 ### Environment Variables
 
@@ -186,15 +186,7 @@ GRAPHVIZ_PATH=C:\Program Files\Graphviz\bin
 
 **Note:** The application uses `python-dotenv` to load environment variables from the `.env` file automatically.
 
-## 🧪 Testing
-
-Run tests using Django's test framework:
-
-```bash
-python manage.py test
-```
-
-## 📝 API Documentation
+## API Documentation
 
 ### Comparison Modes
 
@@ -208,7 +200,7 @@ python manage.py test
 - Maximum word count: 2,000 words (configurable)
 - Currently optimized for Persian language
 
-## 🤝 Contributing
+## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
 
@@ -218,16 +210,67 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 4. Push to the branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
 
-## 📄 License
+## License
 
 This project is developed as a final project for a Data Structures course.
 
-## 👥 Authors
+## Authors
 
 - Developed as part of Data Structures course project
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - Django framework
 - Levenshtein distance algorithm
 - Persian text processing libraries
+
+## Technical Details
+
+### Comparison Algorithm
+
+The project uses the **Levenshtein Distance** algorithm, which is a dynamic programming algorithm for calculating the minimum number of edit operations required to transform one string into another.
+
+### Persian Text Preprocessing
+
+- Removal of diacritics (vowel marks) when needed
+- Normalization of Persian characters
+- Conversion to phonetic representation for phonetic comparison
+- Handling of silent "vav" (و) in Persian words
+
+### Word Alignment
+
+- Use of Needleman-Wunsch algorithm for alignment
+- Calculation of alignment matrix
+- Determination of optimal transformation path
+
+### Visualization
+
+- Generation of edit operation graphs
+- Display of edit distance matrix
+- Interactive visualization with D3.js
+- Generation of static images with Graphviz
+
+## Testing
+
+Run tests using Django's test framework:
+
+```bash
+python manage.py test
+```
+
+The existing tests include:
+- Preprocessing tests
+- Text comparison tests
+- Alignment tests
+- Highlighting tests
+
+## Support
+
+If you encounter any issues or have questions, you can:
+- Create an issue in the project repository
+- Contact the development team
+
+---
+
+**Version:** 1.0.0  
+**Last Updated:** 2024

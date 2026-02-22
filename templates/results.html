@@ -7,7 +7,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>برنامه مقایسه متون</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css">
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
     <style>
         /* استایل‌های قبلی */
         :root {
@@ -34,7 +35,7 @@
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: 'Vazirmatn', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Dana', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
         
         body {
@@ -44,7 +45,7 @@
             padding: 0;
             margin: 0;
             min-height: 100vh;
-            font-family: 'Vazirmatn', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Dana', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
         
         .app-container {
@@ -74,7 +75,7 @@
             color: var(--dark);
             padding-bottom: 8px;
             text-align: right;
-            font-family: 'Vazirmatn', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Dana', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
         
         h1 {
@@ -104,7 +105,7 @@
             box-shadow: 0 2px 8px rgba(0,0,0,0.04);
             font-size: 14px;
             text-align: right;
-            font-family: 'Vazirmatn', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Dana', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
         
         th, td {
@@ -155,7 +156,7 @@
             transition: all 0.2s;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
             gap: 5px;
-            font-family: 'Vazirmatn', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Dana', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
         
         .btn:hover {
@@ -243,7 +244,7 @@
             font-weight: 500;
             transition: all 0.2s;
             white-space: nowrap;
-            font-family: 'Vazirmatn', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Dana', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
         
         .tab-btn.active {
@@ -428,7 +429,7 @@
         
         .guide-list li {
             margin-bottom: 8px;
-            font-family: 'Vazirmatn', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Dana', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
 

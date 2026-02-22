@@ -78,3 +78,13 @@ PHONETIC_GROUPS = {
 
 # Default character for unknown characters
 DEFAULT_PHONETIC = '?'
+
+# Display limits for graph visualization
+MAX_TEXT_DISPLAY_LENGTH = 50  # Maximum characters to display in graph text nodes
+MAX_WORD_DISPLAY_LENGTH = 20   # Maximum characters to display in graph word nodes
+
+# Middleware string limits
+MAX_PATH_LENGTH = 500          # Maximum path length for request logging
+MAX_QUERY_STRING_LENGTH = 1000 # Maximum query string length for request logging
+MAX_USER_AGENT_LENGTH = 500    # Maximum user agent length for request logging
+MAX_REFERER_LENGTH = 500       # Maximum referer length for request logging

@@ -27,12 +27,24 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECRET_KEY must be set via environment variable or .env file
 SECRET_KEY = os.environ.get('SECRET_KEY')
 if not SECRET_KEY:
-    raise ValueError(
-        "SECURITY ERROR: SECRET_KEY is not set! "
-        "Please set SECRET_KEY environment variable or add it to .env file. "
-        "For production, generate a secure key using: "
-        "python -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())'"
-    )
+    if DEBUG:
+        # Use a default key for development only (with warning)
+        import warnings
+        warnings.warn(
+            "SECRET_KEY is not set! Using a default development key. "
+            "This is UNSAFE for production. Please set SECRET_KEY environment variable or add it to .env file. "
+            "Generate a secure key using: "
+            "python -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())'",
+            UserWarning
+        )
+        SECRET_KEY = 'django-insecure-dev-key-change-in-production-' + str(BASE_DIR)
+    else:
+        raise ValueError(
+            "SECURITY ERROR: SECRET_KEY is not set! "
+            "Please set SECRET_KEY environment variable or add it to .env file. "
+            "For production, generate a secure key using: "
+            "python -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())'"
+        )
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', 'True') == 'True'

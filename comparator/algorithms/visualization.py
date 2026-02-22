@@ -27,6 +27,8 @@ except ImportError:
             logger.addHandler(handler)
         return logger
 
+# Import from logs_setting to use logs directory
+from comparator.algorithms.logs_setting import get_logger
 logger = get_logger(__name__, "visualization.log")
 
 def visualize_word_operations(

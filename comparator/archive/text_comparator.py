@@ -367,8 +367,6 @@ class TextComparator:
         """Compare two texts and return highlighted versions and operations"""
         if mode == 'phonetic':
             return self._compare_phonetically()
-        if mode == 'phonetic1':
-            return self._compare_phonetically_new()
         if mode == 'persian':
             return self._compare_phonetically_new1()        
         else:

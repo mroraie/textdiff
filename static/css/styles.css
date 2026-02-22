@@ -1,3 +1,44 @@
+/* ===== Font Face Declarations ===== */
+@font-face {
+    font-family: 'Dana';
+    src: url('../fonts/dana-regular.woff2') format('woff2');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Dana';
+    src: url('../fonts/dana-light.woff2') format('woff2');
+    font-weight: 300;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Dana';
+    src: url('../fonts/dana-extralight.woff2') format('woff2');
+    font-weight: 200;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Dana';
+    src: url('../fonts/dana-medium.woff2') format('woff2');
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Dana';
+    src: url('../fonts/dana-bold.woff2') format('woff2');
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}
+
 /* ===== Base Styles ===== */
 :root {
     --primary-color: #1a73e8;
@@ -14,7 +55,7 @@
 }
 
 body {
-    font-family: 'Tajawal', 'Tahoma', Arial, sans-serif;
+    font-family: 'Dana', 'Tahoma', Arial, sans-serif;
     line-height: 1.6;
     margin: 0;
     padding: 0;
@@ -57,7 +98,7 @@ textarea {
     font-size: 16px;
     border: 1px solid #ddd;
     border-radius: 8px;
-    font-family: 'Tahoma', Arial, sans-serif;
+    font-family: 'Dana', 'Tahoma', Arial, sans-serif;
     transition: all 0.3s;
 }
 
@@ -566,7 +607,7 @@ button:hover, .btn:hover {
 }
 
 .phonetic-comparison-container {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: 'Dana', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 .phonetic-row {

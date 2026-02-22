@@ -1,4 +1,13 @@
 import logging
+import os
+from pathlib import Path
+
+# Get project root directory (parent of this file's parent)
+BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent
+LOGS_DIR = BASE_DIR / 'logs'
+
+# Create logs directory if it doesn't exist
+LOGS_DIR.mkdir(exist_ok=True)
 
 RESET = "\x1b[0m"
 COLOR_MAP = {
@@ -22,6 +31,18 @@ def get_logger(
     log_file: str = "app.log",
     level=logging.DEBUG
 ) -> logging.Logger:
+    """
+    Get a logger with console and file handlers.
+    Log files are stored in the logs/ directory.
+    
+    Args:
+        name: Logger name
+        log_file: Log file name (will be stored in logs/ directory)
+        level: Logging level
+        
+    Returns:
+        Configured logger instance
+    """
     logger = logging.getLogger(name)
     logger.setLevel(level)
 
@@ -33,7 +54,9 @@ def get_logger(
             )
         )
 
-        file_handler = logging.FileHandler(log_file, encoding="utf-8")
+        # Store log files in logs/ directory
+        log_path = LOGS_DIR / log_file
+        file_handler = logging.FileHandler(log_path, encoding="utf-8")
         file_handler.setFormatter(
             logging.Formatter(
                 "%(asctime)s - %(name)s - %(levelname)s - %(message)s"

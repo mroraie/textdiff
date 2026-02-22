@@ -247,3 +247,37 @@ def get_file_info(uploaded_file) -> dict:
         'extension': ext,
     }
 
+
+def validate_text_input(text1: str, text2: str) -> Tuple[bool, Optional[str]]:
+    """
+    Validate text inputs for length and word count.
+    This is a shared validation function to avoid code duplication.
+    
+    Args:
+        text1: First text to validate
+        text2: Second text to validate
+        
+    Returns:
+        Tuple[bool, Optional[str]]: (is_valid, error_message)
+        - If valid: (True, None)
+        - If invalid: (False, error_message)
+    """
+    from textdiff.settings import MAX_TEXT_LENGTH, MAX_WORDS
+    
+    # Check if texts are empty
+    if not text1 or not text1.strip():
+        return False, "Text1 cannot be empty."
+    if not text2 or not text2.strip():
+        return False, "Text2 cannot be empty."
+    
+    # Validate text length
+    if len(text1) > MAX_TEXT_LENGTH or len(text2) > MAX_TEXT_LENGTH:
+        return False, f"Texts must be shorter than {MAX_TEXT_LENGTH} characters."
+    
+    # Validate word count
+    word_count1 = len(text1.split())
+    word_count2 = len(text2.split())
+    if word_count1 > MAX_WORDS or word_count2 > MAX_WORDS:
+        return False, f"Texts must contain fewer than {MAX_WORDS} words."
+    
+    return True, None

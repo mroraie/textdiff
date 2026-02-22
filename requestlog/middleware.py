@@ -1,6 +1,15 @@
 import time
+import logging
 from django.utils.deprecation import MiddlewareMixin
 from .models import RequestLog
+from comparator.algorithms.constants import (
+    MAX_PATH_LENGTH,
+    MAX_QUERY_STRING_LENGTH,
+    MAX_USER_AGENT_LENGTH,
+    MAX_REFERER_LENGTH,
+)
+
+logger = logging.getLogger(__name__)
 
 
 class RequestLoggingMiddleware(MiddlewareMixin):
@@ -41,23 +50,24 @@ class RequestLoggingMiddleware(MiddlewareMixin):
         query_string = request.GET.urlencode() if request.GET else None
 
         # ثبت لاگ (به صورت async یا در پس‌زمینه برای جلوگیری از کند شدن)
+        # استفاده از logging به جای دیتابیس برای لاگ‌های معمولی
+        # یا می‌توان از Celery برای async logging استفاده کرد
         try:
+            # Log to database (can be optimized with async queue in production)
             RequestLog.objects.create(
                 method=request.method,
-                path=request.path[:500],  # محدود کردن طول مسیر
-                query_string=query_string[:1000] if query_string else None,  # محدود کردن طول
+                path=request.path[:MAX_PATH_LENGTH],
+                query_string=query_string[:MAX_QUERY_STRING_LENGTH] if query_string else None,
                 ip_address=ip_address,
-                user_agent=request.META.get('HTTP_USER_AGENT', '')[:500],
-                referer=request.META.get('HTTP_REFERER', '')[:500] if request.META.get('HTTP_REFERER') else None,
+                user_agent=request.META.get('HTTP_USER_AGENT', '')[:MAX_USER_AGENT_LENGTH],
+                referer=request.META.get('HTTP_REFERER', '')[:MAX_REFERER_LENGTH] if request.META.get('HTTP_REFERER') else None,
                 status_code=response.status_code,
                 response_time=response_time,
                 user=user,
             )
         except Exception as e:
             # در صورت خطا، لاگ را در console ثبت می‌کنیم تا برنامه متوقف نشود
-            import logging
-            logger = logging.getLogger(__name__)
-            logger.error(f"خطا در ثبت لاگ درخواست: {e}")
+            logger.error(f"Error logging request to database: {e}", exc_info=True)
 
         return response
 

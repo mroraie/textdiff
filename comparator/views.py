@@ -23,8 +23,13 @@ from comparator.utils import (
     extract_text_from_file,
     validate_file_size,
     get_file_info,
+    validate_text_input,
 )
 from textdiff.settings import MAX_TEXT_LENGTH, MAX_WORDS
+from comparator.algorithms.constants import (
+    MAX_TEXT_DISPLAY_LENGTH,
+    MAX_WORD_DISPLAY_LENGTH,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -117,20 +122,10 @@ def compare(request):
     text1 = request.GET.get("text1", "").strip()
     text2 = request.GET.get("text2", "").strip()
 
-    if not text1 or not text2:
-        messages.error(request, "No text found for comparison.")
-        return redirect("index")
-
-    # Validate text length
-    if len(text1) > MAX_TEXT_LENGTH or len(text2) > MAX_TEXT_LENGTH:
-        messages.error(request, f"Texts must be shorter than {MAX_TEXT_LENGTH} characters.")
-        return redirect("index")
-    
-    # Validate word count
-    word_count1 = len(text1.split())
-    word_count2 = len(text2.split())
-    if word_count1 > MAX_WORDS or word_count2 > MAX_WORDS:
-        messages.error(request, f"Texts must contain fewer than {MAX_WORDS} words.")
+    # Use shared validation function
+    is_valid, error_msg = validate_text_input(text1, text2)
+    if not is_valid:
+        messages.error(request, error_msg)
         return redirect("index")
 
     try:
@@ -474,18 +469,11 @@ def api_graph_data(request):
             'error': 'Both text1 and text2 parameters are required'
         }, status=400)
     
-    # Validation for text length
-    if len(text1) > MAX_TEXT_LENGTH or len(text2) > MAX_TEXT_LENGTH:
+    # Use shared validation function
+    is_valid, error_msg = validate_text_input(text1, text2)
+    if not is_valid:
         return JsonResponse({
-            'error': f'Texts must be shorter than {MAX_TEXT_LENGTH} characters'
-        }, status=400)
-    
-    # Validation for word count
-    word_count1 = len(text1.split())
-    word_count2 = len(text2.split())
-    if word_count1 > MAX_WORDS or word_count2 > MAX_WORDS:
-        return JsonResponse({
-            'error': f'Texts must contain fewer than {MAX_WORDS} words'
+            'error': error_msg
         }, status=400)
     
     # Validation for mode
@@ -534,12 +522,19 @@ def _generate_text_graph_data(words1, words2, mode='standard'):
     
     Returns:
         Dictionary with nodes and edges for graph visualization
+        
+    Raises:
+        Exception: If graph generation fails
     """
     from comparator.algorithms.comparator import TextComparator
     from comparator.algorithms.alignment import align_words
     
-    # Align words
-    aligned1, aligned2, operations, total_cost = align_words(words1, words2)
+    try:
+        # Align words
+        aligned1, aligned2, operations, total_cost = align_words(words1, words2)
+    except Exception as e:
+        logger.error(f"Error aligning words in graph generation: {str(e)}", exc_info=True)
+        raise
     
     nodes = []
     edges = []
@@ -550,7 +545,7 @@ def _generate_text_graph_data(words1, words2, mode='standard'):
     
     nodes.append({
         'id': 'source_text',
-        'label': text1_str[:50] + ('...' if len(text1_str) > 50 else ''),
+        'label': text1_str[:MAX_TEXT_DISPLAY_LENGTH] + ('...' if len(text1_str) > MAX_TEXT_DISPLAY_LENGTH else ''),
         'type': 'source_text',
         'color': '#69b3a2',
         'size': 30
@@ -558,7 +553,7 @@ def _generate_text_graph_data(words1, words2, mode='standard'):
     
     nodes.append({
         'id': 'target_text',
-        'label': text2_str[:50] + ('...' if len(text2_str) > 50 else ''),
+        'label': text2_str[:MAX_TEXT_DISPLAY_LENGTH] + ('...' if len(text2_str) > MAX_TEXT_DISPLAY_LENGTH else ''),
         'type': 'target_text',
         'color': '#ff6b6b',
         'size': 30
@@ -573,7 +568,7 @@ def _generate_text_graph_data(words1, words2, mode='standard'):
             node_id = f"src_word_{word_idx1}"
             nodes.append({
                 'id': node_id,
-                'label': w1[:20] + ('...' if len(w1) > 20 else ''),
+                'label': w1[:MAX_WORD_DISPLAY_LENGTH] + ('...' if len(w1) > MAX_WORD_DISPLAY_LENGTH else ''),
                 'type': 'source_word',
                 'color': '#a1d99b',
                 'size': 18,
@@ -593,7 +588,7 @@ def _generate_text_graph_data(words1, words2, mode='standard'):
             node_id = f"tgt_word_{word_idx2}"
             nodes.append({
                 'id': node_id,
-                'label': w2[:20] + ('...' if len(w2) > 20 else ''),
+                'label': w2[:MAX_WORD_DISPLAY_LENGTH] + ('...' if len(w2) > MAX_WORD_DISPLAY_LENGTH else ''),
                 'type': 'target_word',
                 'color': '#fdae6b',
                 'size': 18,
@@ -710,204 +705,24 @@ def _generate_text_graph_data(words1, words2, mode='standard'):
     }
 
 
-def _generate_word_graph_data(word1, word2):
-    operations = _simulate_word_operations(word1, word2)
-    
-    nodes = []
-    edges = []
-    
-    nodes.append({
-        'id': 'source_text',
-        'label': word1,
-        'type': 'source_text',
-        'color': '#69b3a2',
-        'size': 25
-    })
-    
-    nodes.append({
-        'id': 'target_text',
-        'label': word2,
-        'type': 'target_text',
-        'color': '#ff6b6b',
-        'size': 25
-    })
-    
-    for i, char in enumerate(word1):
-        node_id = f"src_char_{i}"
-        nodes.append({
-            'id': node_id,
-            'label': char,
-            'type': 'source_char',
-            'color': '#a1d99b',
-            'size': 15,
-            'position': i
-        })
-        
-        edges.append({
-            'source': 'source_text',
-            'target': node_id,
-            'label': 'contains',
-            'color': '#69b3a2',
-            'width': 1,
-            'dashes': True
-        })
-    
-    for j, char in enumerate(word2):
-        node_id = f"tgt_char_{j}"
-        nodes.append({
-            'id': node_id,
-            'label': char,
-            'type': 'target_char',
-            'color': '#fdae6b',
-            'size': 15,
-            'position': j
-        })
-        
-        edges.append({
-            'source': 'target_text',
-            'target': node_id,
-            'label': 'contains',
-            'color': '#ff6b6b',
-            'width': 1,
-            'dashes': True
-        })
-    
-    op_count = 0
-    stats = {'matches': 0, 'substitutes': 0, 'deletes': 0, 'inserts': 0}
-    
-    for op in operations:
-        op_type = op[0]
-        i = op[1] if len(op) > 1 else None
-        j = op[2] if len(op) > 2 else None
-        
-        op_id = f"op_{op_count}"
-        op_label = _get_operation_label(op_type, word1, word2, i, j)
-        op_color = _get_operation_color(op_type)
-        
-        if op_type == 'match':
-            stats['matches'] += 1
-        elif op_type == 'substitute':
-            stats['substitutes'] += 1
-        elif op_type == 'delete':
-            stats['deletes'] += 1
-        elif op_type == 'insert':
-            stats['inserts'] += 1
-        
-        nodes.append({
-            'id': op_id,
-            'label': op_label,
-            'type': 'operation',
-            'color': op_color,
-            'size': 12
-        })
-        
-        if op_type in ['match', 'substitute']:
-            edges.append({
-                'source': f"src_char_{i}",
-                'target': op_id,
-                'label': 'from',
-                'color': op_color,
-                'width': 2
-            })
-            
-            edges.append({
-                'source': op_id,
-                'target': f"tgt_char_{j}",
-                'label': 'to',
-                'color': op_color,
-                'width': 2
-            })
-        elif op_type == 'delete':
-            edges.append({
-                'source': f"src_char_{i}",
-                'target': op_id,
-                'label': 'deleted',
-                'color': op_color,
-                'width': 2
-            })
-        elif op_type == 'insert':
-            edges.append({
-                'source': op_id,
-                'target': f"tgt_char_{j}",
-                'label': 'inserted',
-                'color': op_color,
-                'width': 2
-            })
-        
-        op_count += 1
-    
-    stats_node = {
-        'id': 'stats',
-        'label': f"Conversion Statistics\nOperations count: {len(operations)}\n"
-                f"Matches: {stats['matches']}\nSubstitutes: {stats['substitutes']}\n"
-                f"Deletes: {stats['deletes']}\nInserts: {stats['inserts']}",
-        'type': 'statistics',
-        'color': '#9ecae1',
-        'size': 20
-    }
-    nodes.append(stats_node)
-    
-    edges.append({
-        'source': 'stats',
-        'target': 'source_text',
-        'label': 'analysis',
-        'color': '#9ecae1',
-        'width': 2,
-        'dashes': [5, 5]
-    })
-    
-    edges.append({
-        'source': 'stats',
-        'target': 'target_text',
-        'label': 'analysis',
-        'color': '#9ecae1',
-        'width': 2,
-        'dashes': [5, 5]
-    })
-    
-    return {
-        'nodes': nodes,
-        'edges': edges,
-        'metadata': {
-            'text1': word1,
-            'text2': word2,
-            'type': 'word_comparison',
-            'operations_count': len(operations),
-            'stats': stats
-        }
-    }
-
-
-
-def _simulate_word_operations(word1, word2):
-    operations = []
-    len1, len2 = len(word1), len(word2)
-    i, j = 0, 0
-    
-    while i < len1 and j < len2:
-        if word1[i] == word2[j]:
-            operations.append(('match', i, j))
-            i += 1
-            j += 1
-        else:
-            operations.append(('substitute', i, j))
-            i += 1
-            j += 1
-    
-    while i < len1:
-        operations.append(('delete', i))
-        i += 1
-    
-    while j < len2:
-        operations.append(('insert', j))
-        j += 1
-    
-    return operations
 
 
 
 
-def _get_operation_label(op_type, item1, item2, i, j):
+def _get_operation_label(op_type: str, item1: str, item2: str, i: int = None, j: int = None) -> str:
+    """
+    Get a human-readable label for an operation.
+    
+    Args:
+        op_type: Type of operation (match, substitute, delete, insert)
+        item1: First item (word or character)
+        item2: Second item (word or character)
+        i: Optional index for item1
+        j: Optional index for item2
+        
+    Returns:
+        Human-readable operation label
+    """
     labels = {
         'match': f'Match: "{item1}" → "{item2}"',
         'substitute': f'Substitute: "{item1}" → "{item2}"',
@@ -917,7 +732,16 @@ def _get_operation_label(op_type, item1, item2, i, j):
     return labels.get(op_type, op_type)
 
 
-def _get_operation_color(op_type):
+def _get_operation_color(op_type: str) -> str:
+    """
+    Get color code for an operation type.
+    
+    Args:
+        op_type: Type of operation (match, substitute, delete, insert)
+        
+    Returns:
+        Hex color code for the operation
+    """
     color_map = {
         'match': '#4daf4a',
         'substitute': '#ff7f00',
@@ -991,16 +815,10 @@ def upload_and_compare(request):
             messages.error(request, "فایل دوم خالی است یا متن قابل خواندن ندارد.")
             return render(request, "upload.html")
         
-        # اعتبارسنجی طول متن
-        if len(text1) > MAX_TEXT_LENGTH or len(text2) > MAX_TEXT_LENGTH:
-            messages.error(request, f"متن استخراج شده از فایل‌ها باید کمتر از {MAX_TEXT_LENGTH} کاراکتر باشد.")
-            return render(request, "upload.html")
-        
-        # اعتبارسنجی تعداد کلمات
-        word_count1 = len(text1.split())
-        word_count2 = len(text2.split())
-        if word_count1 > MAX_WORDS or word_count2 > MAX_WORDS:
-            messages.error(request, f"متن استخراج شده از فایل‌ها باید کمتر از {MAX_WORDS} کلمه داشته باشد.")
+        # Use shared validation function
+        is_valid, error_msg = validate_text_input(text1, text2)
+        if not is_valid:
+            messages.error(request, f"متن استخراج شده از فایل‌ها: {error_msg}")
             return render(request, "upload.html")
         
         # هدایت به صفحه مقایسه با متن‌های استخراج شده
